@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="Yaadein 2026 — SSBF Alumni Meet Welcome Kiosk">
+  <meta name="theme-color" content="#04030E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Yaadein 2026 — SSBF Alumni Meet</title>
+  <link rel="stylesheet" href="css/styles.css?v=8">
+</head>
+<body>
+  <!-- Particle canvas background -->
+  <canvas id="particles-canvas"></canvas>
+
+  <div class="app-container">
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <button class="toolbar-btn" id="fullscreen-btn" title="Fullscreen" aria-label="Toggle fullscreen">&#x26F6;</button>
+      <a class="toolbar-btn" href="admin.html" title="Admin" aria-label="Admin panel">&#9881;</a>
+    </div>
+
+    <!-- Live Counter -->
+    <div class="live-counter" aria-live="polite">
+      <span class="counter-pulse"></span>
+      <span id="live-counter">0 checked in</span>
+    </div>
+
+    <!-- Home Screen -->
+    <div class="screen active" id="home-screen">
+      <div class="home-content">
+
+        <div class="event-badge" id="event-badge">
+          <span class="event-badge-dot"></span>
+          SSBF Alumni Meet
+        </div>
+
+        <h1 class="event-title glitch-text" id="event-title">Yaadein 2026</h1>
+        <p class="event-subtitle" id="event-subtitle">Reconnect. Reimagine. Rejoice.</p>
+        <p class="event-info" id="event-info">August 2026 | SSBF Campus, Pune</p>
+
+        <!-- Animated typing prompt -->
+        <div class="search-container">
+          <div class="search-wrapper">
+            <div class="search-input-wrap">
+              <input
+                type="text"
+                id="search-input"
+                class="search-input"
+                placeholder="Enter your name to check in..."
+                autocomplete="off"
+                autofocus
+                aria-label="Search by name"
+              >
+              <div id="search-spinner" class="search-spinner" role="status" aria-label="Searching"></div>
+            </div>
+            <button class="btn btn-primary btn-icon search-btn-glow" id="search-btn" aria-label="Search">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <button class="btn btn-icon voice-btn" id="voice-btn" aria-label="Voice search">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
+          </div>
+          <div id="voice-indicator" class="voice-indicator" aria-live="polite"></div>
+          <p class="search-hint">Type your name or tap the microphone to speak</p>
+        </div>
+
+        <div id="search-results" class="search-results" role="region" aria-label="Search results"></div>
+
+        <!-- Floating stats -->
+        <div class="floating-stats">
+          <div class="floating-stat">
+            <span class="floating-stat-value" id="stat-registered">—</span>
+            <span class="floating-stat-label">Registered</span>
+          </div>
+          <div class="floating-stat-divider"></div>
+          <div class="floating-stat">
+            <span class="floating-stat-value" id="stat-present">—</span>
+            <span class="floating-stat-label">Present</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Screen -->
+    <div class="screen" id="profile-screen">
+      <button class="toolbar-btn" id="home-btn" style="position:fixed;top:1.25rem;left:1.5rem" aria-label="Go back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <div id="profile-content"></div>
+    </div>
+
+  </div>
+
+  <!-- Ambient sound for welcome chime -->
+  <script src="js/config.js?v=8"></script>
+  <script src="js/utils.js?v=8"></script>
+  <script src="js/voice.js?v=8"></script>
+  <script src="js/search.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
+  <script src="js/particles.js?v=8"></script>
+</body>
+</html>

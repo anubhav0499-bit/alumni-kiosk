@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#04030E">
+  <title>Admin — Yaadein 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="admin-container">
+
+    <!-- Admin Panel -->
+    <div id="admin-panel">
+
+      <div class="admin-header">
+        <h1>Event Dashboard</h1>
+        <div class="admin-actions">
+          <button class="admin-btn admin-btn-outline" onclick="Admin.loadDashboard()">&#8635; Refresh</button>
+          <button class="admin-btn admin-btn-primary" onclick="Admin.exportAttendance()">&#8615; Export CSV</button>
+          <button class="admin-btn admin-btn-outline" onclick="Admin.testGreeting()">&#128266; Test Voice</button>
+          <button class="admin-btn admin-btn-danger" onclick="Admin.resetAttendanceData()">&#9888; Reset</button>
+          <a class="admin-btn admin-btn-outline" href="index.html">Kiosk</a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-label">Total Alumni</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-attended">—</div>
+          <div class="stat-label">Checked In</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-rate">—</div>
+          <div class="stat-label">Attendance Rate</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Attendance by Batch</h3>
+          <div id="batch-chart"></div>
+        </div>
+        <div class="chart-card">
+          <h3>Attendance by Program</h3>
+          <div id="program-chart"></div>
+        </div>
+      </div>
+
+      <!-- Attendance Table -->
+      <div class="table-section">
+        <div class="table-header">
+          <h3>Attendance Records <span id="table-count" style="color:var(--text-secondary);font-weight:400"></span></h3>
+          <input type="text" id="attendance-search" class="table-search" placeholder="Filter by name, batch..." oninput="Admin.searchAttendance()" aria-label="Filter attendance">
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Batch</th>
+              <th>Program</th>
+              <th>Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="attendance-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Settings -->
+      <div class="settings-section">
+        <h3>Session Settings</h3>
+        <div class="settings-row">
+          <div class="settings-field" style="flex:2">
+            <label>Welcome Message Template</label>
+            <textarea id="greeting-template">Welcome, {title} {name}. We are delighted to welcome you to the {event}. We hope you have a wonderful time reconnecting with your batchmates and faculty.</textarea>
+          </div>
+          <button class="admin-btn admin-btn-primary" onclick="Admin.updateGreeting()" style="align-self:flex-end">Update</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
