@@ -6,19 +6,22 @@ const Admin = (() => {
   }
 
   async function loadDashboard() {
-    try {
-      const stats = await Search.getStats();
-      if (stats.success) {
-        document.getElementById('stat-total').textContent = stats.totalAlumni;
-        document.getElementById('stat-attended').textContent = stats.totalAttendance;
-        document.getElementById('stat-rate').textContent = stats.attendanceRate + '%';
-
-        renderBatchChart(stats.batchWise);
-        renderProgramChart(stats.programWise);
-      }
-    } catch (err) {
-      showToast('Failed to load statistics', 'error');
+    const cachedCount = Search.getCachedCount();
+    if (cachedCount) {
+      document.getElementById('stat-total').textContent = cachedCount;
+      document.getElementById('stat-attended').textContent = '0';
+      document.getElementById('stat-rate').textContent = '0%';
     }
+
+    Search.getStats().then(stats => {
+      if (!stats.success) return;
+      document.getElementById('stat-total').textContent = stats.totalAlumni;
+      document.getElementById('stat-attended').textContent = stats.totalAttendance;
+      document.getElementById('stat-rate').textContent = stats.attendanceRate + '%';
+      renderBatchChart(stats.batchWise);
+      renderProgramChart(stats.programWise);
+    }).catch(() => {});
+
     loadAttendanceTable();
   }
 

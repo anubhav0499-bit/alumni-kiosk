@@ -371,6 +371,7 @@ const App = (() => {
     const presEl = document.getElementById('stat-present');
     const count = Search.getCachedCount();
     if (regEl && count) regEl.textContent = count;
+    if (presEl) presEl.textContent = '0';
 
     Search.getStats().then(stats => {
       if (!stats.success) return;
