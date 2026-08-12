@@ -359,7 +359,12 @@ const App = (() => {
 
   function preloadData() {
     Search.loadAllAlumni()
-      .then(() => console.log(`Refreshed ${Search.getCachedCount()} alumni from API`))
+      .then(() => {
+        const count = Search.getCachedCount();
+        console.log(`Refreshed ${count} alumni from API`);
+        const regEl = document.getElementById('stat-registered');
+        if (regEl && count) regEl.textContent = count;
+      })
       .catch(() => console.warn('API refresh failed, using cached data'));
   }
 
@@ -374,11 +379,18 @@ const App = (() => {
     if (presEl) presEl.textContent = '0';
 
     Search.getStats().then(stats => {
-      if (!stats.success) return;
+      if (!stats.success) throw new Error('stats failed');
       if (counter) counter.textContent = `${stats.totalAttendance} checked in`;
       if (regEl) regEl.textContent = stats.totalAlumni;
       if (presEl) presEl.textContent = stats.totalAttendance;
-    }).catch(() => {});
+    }).catch(() => {
+      Search.getAttendance().then(result => {
+        if (!result.success) return;
+        const n = result.data.length;
+        if (counter) counter.textContent = `${n} checked in`;
+        if (presEl) presEl.textContent = n;
+      }).catch(() => {});
+    });
   }
 
   // --- Event Listeners ---

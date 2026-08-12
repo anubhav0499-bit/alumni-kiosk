@@ -16,8 +16,6 @@ const Admin = (() => {
     Search.getStats().then(stats => {
       if (!stats.success) return;
       document.getElementById('stat-total').textContent = stats.totalAlumni;
-      document.getElementById('stat-attended').textContent = stats.totalAttendance;
-      document.getElementById('stat-rate').textContent = stats.attendanceRate + '%';
       renderBatchChart(stats.batchWise);
       renderProgramChart(stats.programWise);
     }).catch(() => {});
@@ -31,6 +29,26 @@ const Admin = (() => {
       if (!result.success) return;
 
       let records = result.data;
+
+      if (!filter) {
+        const count = records.length;
+        document.getElementById('stat-attended').textContent = count;
+        const total = parseInt(document.getElementById('stat-total').textContent) || 0;
+        if (total > 0) {
+          document.getElementById('stat-rate').textContent = Math.round((count / total) * 100) + '%';
+        }
+        if (count && !document.getElementById('batch-chart').querySelector('.bar-row')) {
+          const batchWise = {};
+          const programWise = {};
+          records.forEach(r => {
+            if (r.batch) batchWise[r.batch] = (batchWise[r.batch] || 0) + 1;
+            if (r.program) programWise[r.program] = (programWise[r.program] || 0) + 1;
+          });
+          renderBatchChart(batchWise);
+          renderProgramChart(programWise);
+        }
+      }
+
       if (filter) {
         const f = filter.toLowerCase();
         records = records.filter(r =>
