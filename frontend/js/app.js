@@ -10,9 +10,12 @@ const App = (() => {
     setupEventListeners();
     setupInactivityTimer();
     setupNetworkListeners();
+    setEventDetails();
+    if (Search.getCachedCount()) {
+      console.log(`Loaded ${Search.getCachedCount()} alumni from localStorage`);
+    }
     preloadData();
     updateLiveCounter();
-    setEventDetails();
   }
 
   function setEventDetails() {
@@ -372,33 +375,27 @@ const App = (() => {
 
   // --- Preload ---
 
-  async function preloadData(retries = 3) {
-    for (let i = 0; i < retries; i++) {
-      try {
-        await Search.loadAllAlumni();
-        console.log(`Cached ${Search.getCachedCount()} alumni records`);
-        return;
-      } catch {
-        if (i < retries - 1) await new Promise(r => setTimeout(r, 2000 * (i + 1)));
-      }
-    }
-    console.warn('Could not preload alumni data');
+  function preloadData() {
+    Search.loadAllAlumni()
+      .then(() => console.log(`Refreshed ${Search.getCachedCount()} alumni from API`))
+      .catch(() => console.warn('API refresh failed, using cached data'));
   }
 
   // --- Live Counter ---
 
-  async function updateLiveCounter() {
-    try {
-      const stats = await Search.getStats();
-      const counter = document.getElementById('live-counter');
-      if (counter && stats.success) {
-        counter.textContent = `${stats.totalAttendance} checked in`;
-      }
-      const regEl = document.getElementById('stat-registered');
-      const presEl = document.getElementById('stat-present');
-      if (regEl && stats.success) regEl.textContent = stats.totalAlumni;
-      if (presEl && stats.success) presEl.textContent = stats.totalAttendance;
-    } catch {}
+  function updateLiveCounter() {
+    const counter = document.getElementById('live-counter');
+    const regEl = document.getElementById('stat-registered');
+    const presEl = document.getElementById('stat-present');
+    const count = Search.getCachedCount();
+    if (regEl && count) regEl.textContent = count;
+
+    Search.getStats().then(stats => {
+      if (!stats.success) return;
+      if (counter) counter.textContent = `${stats.totalAttendance} checked in`;
+      if (regEl) regEl.textContent = stats.totalAlumni;
+      if (presEl) presEl.textContent = stats.totalAttendance;
+    }).catch(() => {});
   }
 
   // --- Event Listeners ---

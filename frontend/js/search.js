@@ -1,9 +1,29 @@
-// --- Search & API Module ---
-
 const Search = (() => {
   let cachedAlumni = [];
   let cacheTimestamp = 0;
-  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  const CACHE_DURATION = 5 * 60 * 1000;
+  const LS_KEY = 'alumni_data';
+  const LS_TS_KEY = 'alumni_ts';
+
+  function loadFromStorage() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      const ts = parseInt(localStorage.getItem(LS_TS_KEY) || '0', 10);
+      if (raw && ts) {
+        cachedAlumni = JSON.parse(raw);
+        cacheTimestamp = ts;
+      }
+    } catch {}
+  }
+
+  function saveToStorage() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(cachedAlumni));
+      localStorage.setItem(LS_TS_KEY, String(cacheTimestamp));
+    } catch {}
+  }
+
+  loadFromStorage();
 
   async function fetchFromApi(action, params = {}) {
     if (!isOnline()) throw new Error('No internet connection');
@@ -25,39 +45,33 @@ const Search = (() => {
     }
   }
 
-
   async function loadAllAlumni() {
     if (cachedAlumni.length && Date.now() - cacheTimestamp < CACHE_DURATION) {
       return cachedAlumni;
     }
     const result = await fetchFromApi('getAll');
-    if (result.success) {
+    if (result.success && result.data.length) {
       cachedAlumni = result.data;
       cacheTimestamp = Date.now();
+      saveToStorage();
     }
     return cachedAlumni;
   }
 
-  async function searchAlumni(query) {
-    if (!query || !query.trim()) return [];
-
-    // Try local cache first for speed
+  function searchAlumni(query) {
+    if (!query || !query.trim()) return Promise.resolve([]);
     if (cachedAlumni.length) {
       const results = cachedAlumni
         .map(a => ({ ...a, _score: fuzzyMatch(query, a.name) }))
         .filter(a => a._score > 0.4)
         .sort((a, b) => b._score - a._score)
         .slice(0, 10);
-
-      if (results.length) return results;
+      if (results.length) return Promise.resolve(results);
     }
-
-    // Fall back to server
-    const result = await fetchFromApi('search', { query });
-    return result.success ? result.data : [];
+    return fetchFromApi('search', { query }).then(r => r.success ? r.data : []);
   }
 
-  async function markAttendance(alumni) {
+  function markAttendance(alumni) {
     return fetchFromApi('markAttendance', {
       alumniId: alumni.alumniId,
       name: alumni.name,
@@ -67,19 +81,19 @@ const Search = (() => {
     });
   }
 
-  async function checkAttendance(alumniId) {
+  function checkAttendance(alumniId) {
     return fetchFromApi('checkAttendance', { alumniId });
   }
 
-  async function getAttendance() {
+  function getAttendance() {
     return fetchFromApi('attendance');
   }
 
-  async function getStats() {
+  function getStats() {
     return fetchFromApi('stats');
   }
 
-  async function resetAttendance() {
+  function resetAttendance() {
     return fetchFromApi('resetAttendance');
   }
 
@@ -107,6 +121,7 @@ const Search = (() => {
   function clearCache() {
     cachedAlumni = [];
     cacheTimestamp = 0;
+    try { localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_TS_KEY); } catch {}
   }
 
   function getCachedCount() {
