@@ -377,13 +377,17 @@ const App = (() => {
 
   // --- Preload ---
 
-  async function preloadData() {
-    try {
-      await Search.loadAllAlumni();
-      console.log(`Cached ${Search.getCachedCount()} alumni records`);
-    } catch {
-      console.warn('Could not preload alumni data');
+  async function preloadData(retries = 3) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        await Search.loadAllAlumni();
+        console.log(`Cached ${Search.getCachedCount()} alumni records`);
+        return;
+      } catch {
+        if (i < retries - 1) await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+      }
     }
+    console.warn('Could not preload alumni data');
   }
 
   // --- Live Counter ---
