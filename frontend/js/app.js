@@ -170,14 +170,7 @@ const App = (() => {
     Voice.greet(alumni).catch(() => {});
 
     Search.markAttendance(alumni).then(attendance => {
-      try {
-        if (attendance?.alreadyCheckedIn) {
-          document.getElementById('attendance-badge').textContent = 'Already Checked In';
-          document.getElementById('attendance-badge').className = 'attendance-badge badge-duplicate';
-        } else if (attendance?.success) {
-          updateLiveCounter();
-        }
-      } catch {}
+      if (attendance?.success) updateLiveCounter();
     }).catch(() => {});
   }
 
