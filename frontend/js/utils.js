@@ -43,7 +43,7 @@ function fuzzyMatch(query, target) {
 function sanitize(str) {
   const div = document.createElement('div');
   div.textContent = str;
-  return div.innerHTML;
+  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function sanitizeUrl(url) {
@@ -53,6 +53,39 @@ function sanitizeUrl(url) {
     if (['http:', 'https:'].includes(parsed.protocol)) return url;
   } catch {}
   return '';
+}
+
+function normalizePhotoUrl(url) {
+  if (!url) return '';
+  url = url.trim();
+
+  let fileId = null;
+
+  // Google Drive: /file/d/FILE_ID/...
+  let match = url.match(/drive\.google\.com\/file\/d\/([^/?]+)/);
+  if (match) fileId = match[1];
+
+  // Google Drive: open?id=FILE_ID or uc?id=FILE_ID
+  if (!fileId) {
+    match = url.match(/drive\.google\.com\/(?:open|uc)\?.*id=([^&]+)/);
+    if (match) fileId = match[1];
+  }
+
+  // Google Drive: /thumbnail?id=FILE_ID
+  if (!fileId) {
+    match = url.match(/drive\.google\.com\/thumbnail\?.*id=([^&]+)/);
+    if (match) fileId = match[1];
+  }
+
+  // lh3 URL already
+  if (!fileId) {
+    match = url.match(/lh3\.googleusercontent\.com\/d\/([^/?]+)/);
+    if (match) fileId = match[1];
+  }
+
+  if (fileId) return `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
+
+  return url;
 }
 
 // --- Debounce ---

@@ -119,6 +119,41 @@ const App = (() => {
     container.classList.add('visible');
   }
 
+  // --- Loading Screen ---
+
+  function showLoadingScreen() {
+    return new Promise(resolve => {
+      showScreen('loading-screen');
+
+      const percentEl = document.getElementById('loader-percent');
+      const circleEl = document.getElementById('loader-circle');
+      const barEl = document.getElementById('loader-bar');
+      const tags = document.querySelectorAll('.loader-tag');
+      const circumference = 2 * Math.PI * 90;
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 6 + 2;
+        if (progress > 100) progress = 100;
+
+        const pct = Math.round(progress);
+        percentEl.textContent = pct + '%';
+        circleEl.style.strokeDashoffset = circumference - (circumference * progress / 100);
+        barEl.style.width = progress + '%';
+
+        tags.forEach(t => t.classList.remove('loader-tag-active'));
+        if (progress < 35) tags[0].classList.add('loader-tag-active');
+        else if (progress < 70) tags[1].classList.add('loader-tag-active');
+        else tags[2].classList.add('loader-tag-active');
+
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(resolve, 400);
+        }
+      }, 80);
+    });
+  }
+
   // --- Alumni Profile ---
 
   function selectResult(index) {
@@ -126,25 +161,32 @@ const App = (() => {
   }
 
   async function selectAlumni(alumni) {
+    const [, attendanceResult] = await Promise.allSettled([
+      showLoadingScreen(),
+      Search.markAttendance(alumni).catch(err => ({ error: err }))
+    ]);
+
     showScreen('profile-screen');
     renderProfile(alumni);
 
     try {
-      const attendance = await Search.markAttendance(alumni);
-      if (attendance.alreadyCheckedIn) {
+      const attendance = attendanceResult.status === 'fulfilled' ? attendanceResult.value : null;
+      if (attendance?.alreadyCheckedIn) {
         showToast('You have already checked in.', 'warning', 5000);
         document.getElementById('attendance-badge').textContent = 'Already Checked In';
         document.getElementById('attendance-badge').className = 'attendance-badge badge-duplicate';
-      } else if (attendance.success) {
+      } else if (attendance?.success) {
         document.getElementById('attendance-badge').textContent = 'Checked In ✓';
         document.getElementById('attendance-badge').className = 'attendance-badge badge-success';
         updateLiveCounter();
+      } else if (attendance?.error) {
+        console.error('Attendance error:', attendance.error);
+        document.getElementById('attendance-badge').textContent = 'Check-in Error';
+        document.getElementById('attendance-badge').className = 'attendance-badge badge-duplicate';
+        showToast('Could not record attendance. Please inform the desk.', 'error');
       }
-    } catch (err) {
-      console.error('Attendance error:', err);
-      document.getElementById('attendance-badge').textContent = 'Check-in Error';
-      document.getElementById('attendance-badge').className = 'attendance-badge badge-duplicate';
-      showToast('Could not record attendance. Please inform the desk.', 'error');
+    } catch (badgeErr) {
+      console.error('Badge update error:', badgeErr);
     }
 
     try {
@@ -154,8 +196,9 @@ const App = (() => {
 
   function renderProfile(alumni) {
     const container = document.getElementById('profile-content');
-    const photoHtml = alumni.photoUrl
-      ? `<img src="${sanitizeUrl(alumni.photoUrl)}" alt="${sanitize(alumni.name)}" class="profile-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    const photoSrc = normalizePhotoUrl(alumni.photoUrl);
+    const photoHtml = photoSrc
+      ? `<img src="${sanitizeUrl(photoSrc)}" alt="${sanitize(alumni.name)}" class="profile-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
 
     container.innerHTML = `
@@ -163,7 +206,7 @@ const App = (() => {
         <div class="profile-header">
           <div class="profile-photo-wrapper">
             ${photoHtml}
-            <div class="profile-avatar" ${alumni.photoUrl ? 'style="display:none"' : ''}>${getInitials(alumni.name)}</div>
+            <div class="profile-avatar" ${photoSrc ? 'style="display:none"' : ''}>${getInitials(alumni.name)}</div>
           </div>
           <h1 class="profile-name">${sanitize(alumni.name)}</h1>
           <p class="profile-designation">${sanitize(alumni.designation || '')}${alumni.designation && alumni.company ? ' at ' : ''}${sanitize(alumni.company || '')}</p>
@@ -177,7 +220,26 @@ const App = (() => {
           ${alumni.achievement ? profileField('Achievement', alumni.achievement, true) : ''}
         </div>
         ${alumni.linkedin ? `<a href="${sanitizeUrl(alumni.linkedin)}" target="_blank" rel="noopener" class="linkedin-link">View LinkedIn Profile</a>` : ''}
-        <button class="btn btn-large btn-primary" onclick="App.goHome()">Done</button>
+
+        <div class="contact-update-section" id="contact-update">
+          <h3 class="contact-update-title">Update Your Contact Details</h3>
+          <p class="contact-update-subtitle">Help us stay connected</p>
+          <div class="contact-fields">
+            <div class="contact-field">
+              <label for="contact-phone">Phone Number</label>
+              <input type="tel" id="contact-phone" placeholder="+91 98765 43210" autocomplete="off" value="${sanitize(alumni.phone || '')}">
+            </div>
+            <div class="contact-field">
+              <label for="contact-email">Email Address</label>
+              <input type="email" id="contact-email" placeholder="yourname@email.com" autocomplete="off" value="${sanitize(alumni.email || '')}">
+            </div>
+          </div>
+          <div class="contact-actions">
+            <button class="btn btn-primary contact-submit-btn" id="contact-submit-btn" onclick="App.submitContactUpdate('${sanitize(alumni.alumniId).replace(/'/g, "\\'")}')">Save & Continue</button>
+            <button class="btn btn-secondary" onclick="App.goHome()">Skip</button>
+          </div>
+          <div id="contact-status" class="contact-status"></div>
+        </div>
       </div>
     `;
   }
@@ -195,6 +257,42 @@ const App = (() => {
   function getInitials(name) {
     if (!name) return '?';
     return name.split(' ').filter(w => w).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  // --- Contact Update ---
+
+  async function submitContactUpdate(alumniId) {
+    const phone = document.getElementById('contact-phone').value.trim();
+    const email = document.getElementById('contact-email').value.trim();
+    const btn = document.getElementById('contact-submit-btn');
+    const status = document.getElementById('contact-status');
+
+    if (!phone && !email) {
+      status.textContent = 'Please enter at least one field.';
+      status.className = 'contact-status contact-status-error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    status.textContent = '';
+
+    try {
+      const result = await Search.updateContact({ alumniId, phone, email });
+      if (result.success) {
+        Search.clearCache();
+        status.textContent = 'Details saved successfully!';
+        status.className = 'contact-status contact-status-success';
+        setTimeout(goHome, 2000);
+      } else {
+        throw new Error(result.error || 'Failed to save');
+      }
+    } catch (err) {
+      status.textContent = 'Could not save. Please inform the desk.';
+      status.className = 'contact-status contact-status-error';
+      btn.disabled = false;
+      btn.textContent = 'Save & Continue';
+    }
   }
 
   // --- Voice Search ---
@@ -343,7 +441,7 @@ const App = (() => {
 
   return {
     init, goHome, handleSearch, selectAlumni, selectResult,
-    startVoiceSearch, toggleFullscreen,
+    submitContactUpdate, startVoiceSearch, toggleFullscreen,
     getSearchHistory: () => searchHistory
   };
 })();

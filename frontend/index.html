@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <title>Yaadein 2026 — SSBF Alumni Meet</title>
-  <link rel="stylesheet" href="css/styles.css?v=8">
+  <link rel="stylesheet" href="css/styles.css?v=15">
 </head>
 <body>
   <!-- Particle canvas background -->
@@ -40,7 +40,7 @@
 
         <h1 class="event-title glitch-text" id="event-title">Yaadein 2026</h1>
         <p class="event-subtitle" id="event-subtitle">Reconnect. Reimagine. Rejoice.</p>
-        <p class="event-info" id="event-info">August 2026 | SSBF Campus, Pune</p>
+        <p class="event-info" id="event-info">September 2026 | SIU Lavale Campus, Pune</p>
 
         <!-- Animated typing prompt -->
         <div class="search-container">
@@ -85,6 +85,30 @@
       </div>
     </div>
 
+    <!-- Loading Screen -->
+    <div class="screen" id="loading-screen">
+      <div class="loader-container">
+        <div class="loader-ring-outer">
+          <div class="loader-ring-inner">
+            <div class="loader-percent" id="loader-percent">0%</div>
+          </div>
+          <svg class="loader-svg" viewBox="0 0 200 200">
+            <circle class="loader-track" cx="100" cy="100" r="90" />
+            <circle class="loader-fill" id="loader-circle" cx="100" cy="100" r="90" />
+          </svg>
+        </div>
+        <p class="loader-text" id="loader-text">&laquo; LOADING MEMORIES... &raquo;</p>
+        <div class="loader-bar-track">
+          <div class="loader-bar-fill" id="loader-bar"></div>
+        </div>
+        <div class="loader-tags">
+          <span class="loader-tag">NEURAL LINK</span>
+          <span class="loader-tag loader-tag-active">SCANNING</span>
+          <span class="loader-tag">ENCRYPTED</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Profile Screen -->
     <div class="screen" id="profile-screen">
       <button class="toolbar-btn" id="home-btn" style="position:fixed;top:1.25rem;left:1.5rem" aria-label="Go back">
@@ -96,11 +120,11 @@
   </div>
 
   <!-- Ambient sound for welcome chime -->
-  <script src="js/config.js?v=8"></script>
-  <script src="js/utils.js?v=8"></script>
-  <script src="js/voice.js?v=8"></script>
-  <script src="js/search.js?v=8"></script>
-  <script src="js/app.js?v=8"></script>
-  <script src="js/particles.js?v=8"></script>
+  <script src="js/config.js?v=15"></script>
+  <script src="js/utils.js?v=15"></script>
+  <script src="js/voice.js?v=15"></script>
+  <script src="js/search.js?v=15"></script>
+  <script src="js/app.js?v=15"></script>
+  <script src="js/particles.js?v=15"></script>
 </body>
 </html>

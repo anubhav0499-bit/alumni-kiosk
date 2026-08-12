@@ -37,6 +37,8 @@ function doGet(e) {
       return jsonResponse(markAttendance(e.parameter));
     case 'resetAttendance':
       return jsonResponse(resetAttendance());
+    case 'updateContact':
+      return jsonResponse(updateContact(e.parameter));
     default:
       return jsonResponse({ error: 'Unknown action' });
   }
@@ -53,6 +55,8 @@ function doPost(e) {
       return jsonResponse(resetAttendance());
     case 'bulkSearch':
       return jsonResponse(bulkSearch(data.queries));
+    case 'updateContact':
+      return jsonResponse(updateContact(data));
     default:
       return jsonResponse({ error: 'Unknown action' });
   }
@@ -69,13 +73,13 @@ function jsonResponse(data) {
 function getAllAlumni() {
   const sheet = getAlumniSheet();
   const data = sheet.getDataRange().getValues();
-  const headers = data[0];
+  const normalized = normalizeHeaders(data[0]);
   const alumni = [];
 
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row[0] && !row[1]) continue;
-    alumni.push(rowToAlumni(headers, row));
+    alumni.push(rowToAlumni(normalized, row));
   }
 
   return { success: true, data: alumni, count: alumni.length };
@@ -88,7 +92,7 @@ function searchAlumni(query) {
 
   const sheet = getAlumniSheet();
   const data = sheet.getDataRange().getValues();
-  const headers = data[0];
+  const normalized = normalizeHeaders(data[0]);
   const normalizedQuery = normalizeString(query);
   const results = [];
 
@@ -99,7 +103,7 @@ function searchAlumni(query) {
 
     const score = fuzzyMatch(normalizedQuery, name);
     if (score > 0.4) {
-      const alumni = rowToAlumni(headers, row);
+      const alumni = rowToAlumni(normalized, row);
       alumni._score = score;
       results.push(alumni);
     }
@@ -115,21 +119,49 @@ function searchAlumni(query) {
   };
 }
 
-function rowToAlumni(headers, row) {
+function normalizeHeaders(headers) {
+  return headers.map(function(h) { return String(h).trim().toLowerCase().replace(/\s+/g, ''); });
+}
+
+function rowToAlumni(normalized, row) {
+  function col(name, fallback) {
+    var idx = normalized.indexOf(name);
+    return idx !== -1 ? idx : fallback;
+  }
+  var photoIdx = col('photourl', col('photo', 2));
+  var phoneIdx = col('phone', -1);
   return {
-    alumniId: String(row[0]).trim(),
-    name: String(row[1]).trim(),
-    photoUrl: String(row[2]).trim(),
-    program: String(row[3]).trim(),
-    batch: String(row[4]).trim(),
-    graduationYear: String(row[5]).trim(),
-    company: String(row[6]).trim(),
-    designation: String(row[7]).trim(),
-    city: String(row[8]).trim(),
-    email: String(row[9]).trim(),
-    linkedin: String(row[10]).trim(),
-    achievement: String(row[11]).trim()
+    alumniId: String(row[col('alumniid', 0)] || '').trim(),
+    name: String(row[col('name', 1)] || '').trim(),
+    photoUrl: normalizeDriveUrl(String(row[photoIdx] || '').trim()),
+    program: String(row[col('program', 3)] || '').trim(),
+    batch: String(row[col('batch', 4)] || '').trim(),
+    graduationYear: String(row[col('graduationyear', 5)] || '').trim(),
+    company: String(row[col('company', 6)] || '').trim(),
+    designation: String(row[col('designation', 7)] || '').trim(),
+    city: String(row[col('city', 8)] || '').trim(),
+    email: String(row[col('email', 9)] || '').trim(),
+    linkedin: String(row[col('linkedin', 10)] || '').trim(),
+    achievement: String(row[col('achievement', 11)] || '').trim(),
+    phone: phoneIdx !== -1 ? String(row[phoneIdx] || '').trim() : ''
   };
+}
+
+function normalizeDriveUrl(url) {
+  if (!url) return '';
+  var fileId = null;
+  var match = url.match(/drive\.google\.com\/file\/d\/([^/?]+)/);
+  if (match) fileId = match[1];
+  if (!fileId) {
+    match = url.match(/drive\.google\.com\/(?:open|uc)\?.*id=([^&]+)/);
+    if (match) fileId = match[1];
+  }
+  if (!fileId) {
+    match = url.match(/lh3\.googleusercontent\.com\/d\/([^/?]+)/);
+    if (match) fileId = match[1];
+  }
+  if (fileId) return 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w400';
+  return url;
 }
 
 // --- Fuzzy Matching ---
@@ -231,6 +263,52 @@ function markAttendance(data) {
     timestamp: timestamp.toISOString(),
     message: 'Attendance recorded'
   };
+}
+
+function updateContact(data) {
+  if (data.alumniId == null) return { success: false, error: 'Missing alumni ID' };
+  const alumniId = String(data.alumniId).trim();
+  const phone = String(data.phone || '').trim();
+  const email = String(data.email || '').trim();
+
+  if (!alumniId) return { success: false, error: 'Missing alumni ID' };
+  if (!phone && !email) return { success: false, error: 'No contact details provided' };
+
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return { success: false, error: 'Server busy, please try again' };
+
+  try {
+    const sheet = getAlumniSheet();
+    const allData = sheet.getDataRange().getValues();
+    const headers = normalizeHeaders(allData[0]);
+
+    let phoneCol = headers.indexOf('phone');
+    let emailCol = headers.indexOf('email');
+    let nextCol = headers.length;
+
+    if (phoneCol === -1) {
+      phoneCol = nextCol++;
+      sheet.getRange(1, phoneCol + 1).setValue('Phone');
+    }
+    if (emailCol === -1) {
+      emailCol = nextCol++;
+      sheet.getRange(1, emailCol + 1).setValue('Email');
+    }
+
+    const idCol = headers.indexOf('alumniid');
+    if (idCol === -1) return { success: false, error: 'Alumni ID column not found in sheet' };
+    for (let i = 1; i < allData.length; i++) {
+      if (String(allData[i][idCol]).trim() === alumniId) {
+        if (phone) sheet.getRange(i + 1, phoneCol + 1).setValue(phone);
+        if (email) sheet.getRange(i + 1, emailCol + 1).setValue(email);
+        return { success: true, message: 'Contact details updated' };
+      }
+    }
+
+    return { success: false, error: 'Alumni not found' };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function checkAttendance(alumniId) {

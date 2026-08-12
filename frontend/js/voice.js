@@ -5,42 +5,35 @@ const Voice = (() => {
   let isListening = false;
   let bestVoice = null;
 
-  // Ranked preferred voices — natural/neural ones first
-  const PREFERRED_VOICES = [
-    'Microsoft Zira',
-    'Microsoft David',
-    'Google UK English Female',
-    'Google UK English Male',
-    'Google US English',
-    'Samantha',
-    'Daniel',
-    'Karen',
-    'Moira',
-    'Rishi',
-    'Veena',
-    'Alex',
-    'Fiona'
-  ];
-
   function findBestVoice() {
     const voices = window.speechSynthesis.getVoices();
     if (!voices.length) return null;
 
-    // Try preferred voices in order
-    for (const name of PREFERRED_VOICES) {
-      const match = voices.find(v => v.name.includes(name));
-      if (match) return match;
-    }
+    const enVoices = voices.filter(v => v.lang.startsWith('en'));
+    if (!enVoices.length) return voices[0];
 
-    // Fall back to any English voice marked as non-local (cloud/neural)
-    const cloud = voices.find(v => v.lang.startsWith('en') && !v.localService);
+    // Tier 1: Neural/natural voices (Windows 11 "Online" voices, macOS neural)
+    const neural = enVoices.find(v =>
+      /Online|Natural/i.test(v.name) && /Aria|Jenny|Guy|Ana|Steffan/i.test(v.name)
+    ) || enVoices.find(v => /Online|Natural/i.test(v.name));
+    if (neural) return neural;
+
+    // Tier 2: Google cloud voices (Chrome)
+    const google = enVoices.find(v => /^Google UK English Female/.test(v.name))
+      || enVoices.find(v => /^Google/.test(v.name) && !v.localService);
+    if (google) return google;
+
+    // Tier 3: High-quality local voices (macOS/iOS)
+    const premium = enVoices.find(v => /Samantha|Karen|Daniel|Moira|Tessa/i.test(v.name));
+    if (premium) return premium;
+
+    // Tier 4: Any non-local (cloud) English voice
+    const cloud = enVoices.find(v => !v.localService);
     if (cloud) return cloud;
 
-    // Fall back to any English voice
-    const english = voices.find(v => v.lang.startsWith('en'));
-    if (english) return english;
-
-    return voices[0];
+    // Tier 5: Any English voice, avoid Zira/David (robotic)
+    const decent = enVoices.find(v => !/Zira|David|Mark/i.test(v.name));
+    return decent || enVoices[0];
   }
 
   // --- Speech Synthesis ---
@@ -92,13 +85,17 @@ const Voice = (() => {
     window.speechSynthesis.cancel();
 
     // Split into sentences to avoid Chrome's ~15s cutoff
-    const sentences = text.match(/[^.!?,]+[.!?,]?\s*/g) || [text];
+    const sentences = text.match(/[^.!?]+[.!?]?\s*/g) || [text];
 
     startKeepAlive();
     try {
-      for (const sentence of sentences) {
-        const trimmed = sentence.trim();
-        if (trimmed) await speakChunk(trimmed, options);
+      for (let i = 0; i < sentences.length; i++) {
+        const trimmed = sentences[i].trim();
+        if (!trimmed) continue;
+        await speakChunk(trimmed, options);
+        if (i < sentences.length - 1) {
+          await new Promise(r => setTimeout(r, 250));
+        }
       }
     } finally {
       stopKeepAlive();
@@ -278,6 +275,7 @@ const Voice = (() => {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.onvoiceschanged = () => {
       bestVoice = findBestVoice();
+      if (bestVoice) console.log('TTS voice:', bestVoice.name, bestVoice.lang, bestVoice.localService ? '(local)' : '(cloud)');
     };
     window.speechSynthesis.getVoices();
   }

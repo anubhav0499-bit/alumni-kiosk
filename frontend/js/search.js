@@ -75,6 +75,17 @@ const Search = (() => {
     return fetchFromApi('resetAttendance');
   }
 
+  async function updateContact({ alumniId, phone, email }) {
+    if (!isOnline()) throw new Error('No internet connection');
+    const res = await fetch(CONFIG.api.baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'updateContact', alumniId, phone, email })
+    });
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    return res.json();
+  }
+
   function clearCache() {
     cachedAlumni = [];
     cacheTimestamp = 0;
@@ -86,6 +97,6 @@ const Search = (() => {
 
   return {
     loadAllAlumni, searchAlumni, markAttendance, checkAttendance,
-    getAttendance, getStats, resetAttendance, clearCache, getCachedCount
+    getAttendance, getStats, resetAttendance, updateContact, clearCache, getCachedCount
   };
 })();
