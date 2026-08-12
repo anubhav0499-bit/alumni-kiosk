@@ -9,7 +9,7 @@ const CONFIG = {
   },
 
   greeting: {
-    template: 'Welcome {name}. It is our privilege to have you at SSBF. We hope your time here is filled with cherished memories and joyful moments.',
+    template: 'Hi {name}. It is our privilege to have you at SSBF.',
     voice: 'default',
     rate: 0.92,
     pitch: 1.0,
