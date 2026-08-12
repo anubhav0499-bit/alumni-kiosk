@@ -85,13 +85,23 @@ const Search = (() => {
 
   async function updateContact({ alumniId, phone, email }) {
     if (!isOnline()) throw new Error('No internet connection');
-    const res = await fetch(CONFIG.api.baseUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'updateContact', alumniId, phone, email })
-    });
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
-    return res.json();
+    const url = new URL(CONFIG.api.baseUrl, window.location.origin);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const res = await fetch(url.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'updateContact', alumniId, phone, email }),
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      return res.json();
+    } catch (err) {
+      clearTimeout(timeout);
+      throw err.name === 'AbortError' ? new Error('Request timed out') : err;
+    }
   }
 
   function clearCache() {

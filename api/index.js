@@ -32,8 +32,9 @@ module.exports = async function handler(req, res) {
 
     res.setHeader('Content-Type', 'application/json');
     if (READ_ACTIONS.has(action)) {
-      const maxAge = action === 'getAll' ? 120 : 30;
-      res.setHeader('Cache-Control', `s-maxage=${maxAge}, stale-while-revalidate=300`);
+      const sMax = action === 'getAll' ? 120 : 30;
+      const browserMax = action === 'getAll' ? 60 : 15;
+      res.setHeader('Cache-Control', `public, max-age=${browserMax}, s-maxage=${sMax}, stale-while-revalidate=300`);
     } else {
       res.setHeader('Cache-Control', 'no-store');
     }
