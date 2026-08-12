@@ -49,11 +49,24 @@ const Search = (() => {
     if (cachedAlumni.length && Date.now() - cacheTimestamp < CACHE_DURATION) {
       return cachedAlumni;
     }
-    const result = await fetchFromApi('getAll');
-    if (result.success && result.data.length) {
-      cachedAlumni = result.data;
-      cacheTimestamp = Date.now();
-      saveToStorage();
+    try {
+      const result = await fetchFromApi('getAll');
+      if (result.success && result.data.length) {
+        cachedAlumni = result.data;
+        cacheTimestamp = Date.now();
+        saveToStorage();
+        return cachedAlumni;
+      }
+    } catch {}
+    if (!cachedAlumni.length) {
+      try {
+        const res = await fetch('/data/seed.json');
+        if (res.ok) {
+          cachedAlumni = await res.json();
+          cacheTimestamp = Date.now();
+          saveToStorage();
+        }
+      } catch {}
     }
     return cachedAlumni;
   }
