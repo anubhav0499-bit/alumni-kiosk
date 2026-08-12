@@ -38,8 +38,8 @@ function secureEqual(actual, expected) {
     crypto.timingSafeEqual(actualBuffer, expectedBuffer);
 }
 
-function getAdminKey(req) {
-  const header = req.headers?.['x-admin-key'];
+function getHeader(req, name) {
+  const header = req.headers?.[name];
   return Array.isArray(header) ? header[0] : header;
 }
 
@@ -86,14 +86,17 @@ module.exports = async function handler(req, res) {
   }
 
   if (rule.access === 'admin') {
+    const adminUsername = process.env.ADMIN_USERNAME;
     const adminPassword = process.env.ADMIN_PASSWORD;
-    if (!adminPassword) {
+    if (!adminUsername || !adminPassword) {
       res.setHeader('Cache-Control', 'no-store');
       return res.status(503).json({ success: false, error: 'Admin access is not configured' });
     }
-    if (!secureEqual(getAdminKey(req), adminPassword)) {
+    const usernameIsValid = secureEqual(getHeader(req, 'x-admin-username'), adminUsername);
+    const passwordIsValid = secureEqual(getHeader(req, 'x-admin-password'), adminPassword);
+    if (!usernameIsValid || !passwordIsValid) {
       res.setHeader('Cache-Control', 'no-store');
-      return res.status(401).json({ success: false, error: 'Invalid admin access code' });
+      return res.status(401).json({ success: false, error: 'Invalid admin username or password' });
     }
   }
 

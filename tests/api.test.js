@@ -61,15 +61,19 @@ test('state-changing actions reject GET requests', async () => {
   assert.equal(res.headers.allow, 'POST');
 });
 
-test('admin actions fail closed without a valid access code', async (t) => {
+test('admin actions fail closed without valid credentials', async (t) => {
+  const previousUsername = process.env.ADMIN_USERNAME;
   const previousPassword = process.env.ADMIN_PASSWORD;
   const previousToken = process.env.BACKEND_ADMIN_TOKEN;
   t.after(() => {
+    if (previousUsername === undefined) delete process.env.ADMIN_USERNAME;
+    else process.env.ADMIN_USERNAME = previousUsername;
     if (previousPassword === undefined) delete process.env.ADMIN_PASSWORD;
     else process.env.ADMIN_PASSWORD = previousPassword;
     if (previousToken === undefined) delete process.env.BACKEND_ADMIN_TOKEN;
     else process.env.BACKEND_ADMIN_TOKEN = previousToken;
   });
+  process.env.ADMIN_USERNAME = 'event-admin';
   process.env.ADMIN_PASSWORD = 'correct-horse';
   process.env.BACKEND_ADMIN_TOKEN = 'backend-token';
 
@@ -77,7 +81,7 @@ test('admin actions fail closed without a valid access code', async (t) => {
   await handler({
     method: 'POST',
     query: {},
-    headers: { 'x-admin-key': 'wrong' },
+    headers: { 'x-admin-username': 'event-admin', 'x-admin-password': 'wrong' },
     body: { action: 'resetAttendance' }
   }, res);
 
@@ -86,15 +90,19 @@ test('admin actions fail closed without a valid access code', async (t) => {
 
 test('admin proxy forwards only the machine token to Apps Script', async (t) => {
   const originalFetch = global.fetch;
+  const previousUsername = process.env.ADMIN_USERNAME;
   const previousPassword = process.env.ADMIN_PASSWORD;
   const previousToken = process.env.BACKEND_ADMIN_TOKEN;
   t.after(() => {
     global.fetch = originalFetch;
+    if (previousUsername === undefined) delete process.env.ADMIN_USERNAME;
+    else process.env.ADMIN_USERNAME = previousUsername;
     if (previousPassword === undefined) delete process.env.ADMIN_PASSWORD;
     else process.env.ADMIN_PASSWORD = previousPassword;
     if (previousToken === undefined) delete process.env.BACKEND_ADMIN_TOKEN;
     else process.env.BACKEND_ADMIN_TOKEN = previousToken;
   });
+  process.env.ADMIN_USERNAME = 'event-admin';
   process.env.ADMIN_PASSWORD = 'dashboard-secret';
   process.env.BACKEND_ADMIN_TOKEN = 'machine-secret';
 
@@ -110,7 +118,10 @@ test('admin proxy forwards only the machine token to Apps Script', async (t) => 
   await handler({
     method: 'POST',
     query: {},
-    headers: { 'x-admin-key': 'dashboard-secret' },
+    headers: {
+      'x-admin-username': 'event-admin',
+      'x-admin-password': 'dashboard-secret'
+    },
     body: { action: 'attendance' }
   }, res);
 
@@ -118,6 +129,8 @@ test('admin proxy forwards only the machine token to Apps Script', async (t) => 
   assert.equal(requestedUrl.searchParams.has('adminToken'), false);
   assert.equal(JSON.parse(requestedOptions.body).adminToken, 'machine-secret');
   assert.equal(requestedUrl.toString().includes('dashboard-secret'), false);
+  assert.equal(requestedOptions.body.includes('dashboard-secret'), false);
+  assert.equal(requestedOptions.body.includes('event-admin'), false);
   assert.equal(res.headers['cache-control'], 'no-store');
 });
 

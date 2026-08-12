@@ -1,7 +1,7 @@
 // --- Admin Panel Controller ---
 
 const Admin = (() => {
-  let adminKey = '';
+  let adminCredentials = null;
   let attendanceRecords = [];
 
   function init() {
@@ -11,17 +11,21 @@ const Admin = (() => {
     }
     document.getElementById('greeting-template').value = CONFIG.greeting.template;
     document.getElementById('admin-login-form').addEventListener('submit', login);
-    document.getElementById('admin-access-code').focus();
+    document.getElementById('admin-username').focus();
   }
 
   async function login(event) {
     event.preventDefault();
-    const input = document.getElementById('admin-access-code');
+    const usernameInput = document.getElementById('admin-username');
+    const passwordInput = document.getElementById('admin-password');
     const button = document.getElementById('admin-login-btn');
     const status = document.getElementById('admin-login-status');
-    const candidate = input.value;
+    const candidate = {
+      username: usernameInput.value.trim(),
+      password: passwordInput.value
+    };
 
-    if (!candidate) return;
+    if (!candidate.username || !candidate.password) return;
     button.disabled = true;
     button.textContent = 'Checking...';
     status.textContent = '';
@@ -29,16 +33,16 @@ const Admin = (() => {
     try {
       const result = await Search.getAttendance(candidate);
       if (!result.success) throw new Error(result.error || 'Unable to unlock dashboard');
-      adminKey = candidate;
+      adminCredentials = candidate;
       attendanceRecords = result.data || [];
-      input.value = '';
+      passwordInput.value = '';
       document.getElementById('admin-login').hidden = true;
       document.getElementById('admin-panel').hidden = false;
       await loadDashboard({ useLoadedAttendance: true });
     } catch (err) {
-      status.textContent = err.message || 'Invalid access code';
+      status.textContent = err.message || 'Invalid username or password';
       status.className = 'contact-status contact-status-error';
-      input.select();
+      passwordInput.select();
     } finally {
       button.disabled = false;
       button.textContent = 'Unlock Dashboard';
@@ -46,15 +50,15 @@ const Admin = (() => {
   }
 
   function logout() {
-    adminKey = '';
+    adminCredentials = null;
     attendanceRecords = [];
     document.getElementById('admin-panel').hidden = true;
     document.getElementById('admin-login').hidden = false;
-    document.getElementById('admin-access-code').focus();
+    document.getElementById('admin-username').focus();
   }
 
   function handleAuthError(err) {
-    if (/access code|admin access|configured/i.test(err.message || '')) {
+    if (/username|password|admin access|configured/i.test(err.message || '')) {
       logout();
     }
   }
@@ -79,7 +83,7 @@ const Admin = (() => {
 
   async function loadAttendanceTable() {
     try {
-      const result = await Search.getAttendance(adminKey);
+      const result = await Search.getAttendance(adminCredentials);
       if (!result.success) throw new Error(result.error || 'Failed to load attendance');
       attendanceRecords = result.data || [];
       renderAttendanceTable();
@@ -154,7 +158,7 @@ const Admin = (() => {
   async function resetAttendanceData() {
     if (!confirm('Are you sure you want to reset ALL attendance records? This cannot be undone.')) return;
     try {
-      const result = await Search.resetAttendance(adminKey);
+      const result = await Search.resetAttendance(adminCredentials);
       if (!result.success) throw new Error(result.error || 'Reset failed');
       attendanceRecords = [];
       showToast('Attendance reset', 'success');

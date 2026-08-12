@@ -33,9 +33,10 @@ server-side environment variables in Vercel:
 
 ```text
 APPS_SCRIPT_URL=<deployed Apps Script /exec URL>
-ADMIN_PASSWORD=<access code used to unlock admin.html>
-BACKEND_ADMIN_TOKEN=<long random machine token>
-BACKEND_KIOSK_TOKEN=<a different long random machine token>
+ADMIN_USERNAME=<fixed username used to unlock admin.html>
+ADMIN_PASSWORD=<fixed password used to unlock admin.html>
+BACKEND_ADMIN_TOKEN=<long-lived random machine token>
+BACKEND_KIOSK_TOKEN=<a different long-lived random machine token>
 ```
 
 In Apps Script, add Script Properties named `ADMIN_TOKEN` and `KIOSK_TOKEN`
@@ -133,7 +134,7 @@ All settings are in `frontend/js/config.js`:
 
 Navigate to `admin.html` (or click the gear icon on the kiosk).
 
-- **Access code:** set only in Vercel as `ADMIN_PASSWORD`
+- **Username and password:** set only in Vercel as `ADMIN_USERNAME` and `ADMIN_PASSWORD`
 - **View** real-time attendance with batch/program charts
 - **Search/filter** attendance records
 - **Export** attendance to CSV

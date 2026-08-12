@@ -9,7 +9,7 @@ const Search = (() => {
     params = {},
     method = 'GET',
     body = null,
-    adminKey = ''
+    adminCredentials = null
   } = {}) {
     if (!isOnline()) throw new Error('No internet connection');
     const url = new URL(CONFIG.api.baseUrl, window.location.origin);
@@ -24,7 +24,10 @@ const Search = (() => {
     try {
       const headers = {};
       if (method === 'POST') headers['Content-Type'] = 'application/json';
-      if (adminKey) headers['X-Admin-Key'] = adminKey;
+      if (adminCredentials) {
+        headers['X-Admin-Username'] = adminCredentials.username;
+        headers['X-Admin-Password'] = adminCredentials.password;
+      }
       const res = await fetch(url.toString(), {
         method,
         headers,
@@ -88,16 +91,16 @@ const Search = (() => {
     return fetchFromApi('checkAttendance', { params: { alumniId } });
   }
 
-  async function getAttendance(adminKey) {
-    return fetchFromApi('attendance', { method: 'POST', body: {}, adminKey });
+  async function getAttendance(adminCredentials) {
+    return fetchFromApi('attendance', { method: 'POST', body: {}, adminCredentials });
   }
 
   async function getStats() {
     return fetchFromApi('stats');
   }
 
-  async function resetAttendance(adminKey) {
-    return fetchFromApi('resetAttendance', { method: 'POST', body: {}, adminKey });
+  async function resetAttendance(adminCredentials) {
+    return fetchFromApi('resetAttendance', { method: 'POST', body: {}, adminCredentials });
   }
 
   async function updateContact({ alumniId, phone, email }) {

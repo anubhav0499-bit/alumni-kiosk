@@ -23,11 +23,14 @@ test('HTML pages have unique IDs and valid local asset references', () => {
   }
 });
 
-test('admin UI starts locked and contains no hard-coded password', () => {
+test('admin UI starts locked and contains no hard-coded credentials', () => {
   const html = read('frontend/admin.html');
   const scripts = read('frontend/js/admin.js') + read('frontend/js/config.js');
   assert.match(html, /id="admin-panel" hidden/);
+  assert.match(html, /id="admin-username"/);
+  assert.match(html, /id="admin-password"/);
   assert.doesNotMatch(scripts, /ssbf2026admin/i);
+  assert.doesNotMatch(html + scripts, /ssbf-alumni|ssbf-yaadein-2026/i);
 });
 
 test('Apps Script GET handler contains no state-changing actions', () => {
