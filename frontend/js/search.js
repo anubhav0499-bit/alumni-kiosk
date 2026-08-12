@@ -7,7 +7,7 @@ const Search = (() => {
 
   async function fetchFromApi(action, params = {}) {
     if (!isOnline()) throw new Error('No internet connection');
-    const url = new URL(CONFIG.api.baseUrl);
+    const url = new URL(CONFIG.api.baseUrl, window.location.origin);
     url.searchParams.set('action', action);
     for (const [k, v] of Object.entries(params)) {
       url.searchParams.set(k, v);
