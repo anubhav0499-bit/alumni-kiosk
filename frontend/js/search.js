@@ -12,9 +12,17 @@ const Search = (() => {
     for (const [k, v] of Object.entries(params)) {
       url.searchParams.set(k, v);
     }
-    const res = await fetch(url.toString());
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
-    return res.json();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const res = await fetch(url.toString(), { signal: controller.signal });
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      return res.json();
+    } catch (err) {
+      clearTimeout(timeout);
+      throw err.name === 'AbortError' ? new Error('Request timed out') : err;
+    }
   }
 
 

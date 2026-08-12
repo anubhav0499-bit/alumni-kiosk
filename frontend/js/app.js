@@ -161,37 +161,33 @@ const App = (() => {
   }
 
   async function selectAlumni(alumni) {
-    const [, attendanceResult] = await Promise.allSettled([
-      showLoadingScreen(),
-      Search.markAttendance(alumni).catch(err => ({ error: err }))
-    ]);
-
+    await showLoadingScreen();
     showScreen('profile-screen');
     renderProfile(alumni);
 
-    try {
-      const attendance = attendanceResult.status === 'fulfilled' ? attendanceResult.value : null;
-      if (attendance?.alreadyCheckedIn) {
-        showToast('You have already checked in.', 'warning', 5000);
-        document.getElementById('attendance-badge').textContent = 'Already Checked In';
-        document.getElementById('attendance-badge').className = 'attendance-badge badge-duplicate';
-      } else if (attendance?.success) {
-        document.getElementById('attendance-badge').textContent = 'Checked In ✓';
-        document.getElementById('attendance-badge').className = 'attendance-badge badge-success';
-        updateLiveCounter();
-      } else if (attendance?.error) {
-        console.error('Attendance error:', attendance.error);
+    Voice.greet(alumni).catch(() => {});
+
+    Search.markAttendance(alumni).then(attendance => {
+      try {
+        if (attendance?.alreadyCheckedIn) {
+          showToast('You have already checked in.', 'warning', 5000);
+          document.getElementById('attendance-badge').textContent = 'Already Checked In';
+          document.getElementById('attendance-badge').className = 'attendance-badge badge-duplicate';
+        } else if (attendance?.success) {
+          document.getElementById('attendance-badge').textContent = 'Checked In ✓';
+          document.getElementById('attendance-badge').className = 'attendance-badge badge-success';
+          updateLiveCounter();
+        }
+      } catch (badgeErr) {
+        console.error('Badge update error:', badgeErr);
+      }
+    }).catch(err => {
+      console.error('Attendance error:', err);
+      try {
         document.getElementById('attendance-badge').textContent = 'Check-in Error';
         document.getElementById('attendance-badge').className = 'attendance-badge badge-duplicate';
-        showToast('Could not record attendance. Please inform the desk.', 'error');
-      }
-    } catch (badgeErr) {
-      console.error('Badge update error:', badgeErr);
-    }
-
-    try {
-      await Voice.greet(alumni);
-    } catch {}
+      } catch {}
+    });
   }
 
   function renderProfile(alumni) {
