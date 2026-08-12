@@ -167,10 +167,20 @@ const App = (() => {
     showScreen('profile-screen');
     renderProfile(alumni);
 
+    const counter = document.getElementById('live-counter');
+    const presEl = document.getElementById('stat-present');
+    const prev = parseInt(presEl?.textContent) || 0;
+    const next = prev + 1;
+    if (presEl) presEl.textContent = next;
+    if (counter) counter.textContent = `${next} checked in`;
+
     Voice.greet(alumni).catch(() => {});
 
-    Search.markAttendance(alumni).then(attendance => {
-      if (attendance?.success) updateLiveCounter();
+    Search.markAttendance(alumni).then(result => {
+      if (result?.success && result.alreadyCheckedIn) {
+        if (presEl) presEl.textContent = prev;
+        if (counter) counter.textContent = `${prev} checked in`;
+      }
     }).catch(() => {});
   }
 

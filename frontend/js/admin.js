@@ -13,7 +13,7 @@ const Admin = (() => {
       document.getElementById('stat-rate').textContent = '0%';
     }
 
-    Search.getStats().then(stats => {
+    Search.getStats(true).then(stats => {
       if (!stats.success) return;
       document.getElementById('stat-total').textContent = stats.totalAlumni;
       renderBatchChart(stats.batchWise);
@@ -25,7 +25,7 @@ const Admin = (() => {
 
   async function loadAttendanceTable(filter = '') {
     try {
-      const result = await Search.getAttendance();
+      const result = await Search.getAttendance(true);
       if (!result.success) return;
 
       let records = result.data;

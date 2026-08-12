@@ -98,12 +98,12 @@ const Search = (() => {
     return fetchFromApi('checkAttendance', { alumniId });
   }
 
-  function getAttendance() {
-    return fetchFromApi('attendance');
+  function getAttendance(fresh) {
+    return fetchFromApi('attendance', fresh ? { _t: Date.now() } : {});
   }
 
-  function getStats() {
-    return fetchFromApi('stats');
+  function getStats(fresh) {
+    return fetchFromApi('stats', fresh ? { _t: Date.now() } : {});
   }
 
   function resetAttendance() {
