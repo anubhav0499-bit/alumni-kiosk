@@ -133,7 +133,7 @@ const App = (() => {
 
       let progress = 0;
       const interval = setInterval(() => {
-        progress += Math.random() * 6 + 2;
+        progress += Math.random() * 12 + 6;
         if (progress > 100) progress = 100;
 
         const pct = Math.round(progress);
@@ -148,9 +148,9 @@ const App = (() => {
 
         if (progress >= 100) {
           clearInterval(interval);
-          setTimeout(resolve, 400);
+          setTimeout(resolve, 200);
         }
-      }, 80);
+      }, 50);
     });
   }
 
