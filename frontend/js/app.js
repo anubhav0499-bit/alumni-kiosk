@@ -5,8 +5,11 @@ const App = (() => {
   let currentScreen = 'home';
   let searchHistory = [];
   let lastResults = [];
+  let searchRequestId = 0;
 
   function init() {
+    const savedGreeting = localStorage.getItem('greetingTemplate');
+    if (savedGreeting && savedGreeting.length <= 500) CONFIG.greeting.template = savedGreeting;
     setupEventListeners();
     setupInactivityTimer();
     setupNetworkListeners();
@@ -36,6 +39,7 @@ const App = (() => {
 
   function goHome() {
     Voice.stopSpeaking();
+    searchRequestId++;
     showScreen('home-screen');
     document.getElementById('search-input').value = '';
     document.getElementById('search-results').innerHTML = '';
@@ -48,12 +52,14 @@ const App = (() => {
   async function handleSearch(query) {
     if (!query || !query.trim()) return;
     query = query.trim();
+    const requestId = ++searchRequestId;
 
     resetInactivityTimer();
     showSearchLoading(true);
 
     try {
       const results = await Search.searchAlumni(query);
+      if (requestId !== searchRequestId) return;
 
       if (results.length === 0) {
         showNoResults();
@@ -64,9 +70,10 @@ const App = (() => {
       searchHistory.unshift({ query, time: new Date(), resultCount: results.length });
       if (searchHistory.length > 50) searchHistory.pop();
     } catch (err) {
+      if (requestId !== searchRequestId) return;
       showToast(err.message || 'Search failed. Please try again.', 'error');
     } finally {
-      showSearchLoading(false);
+      if (requestId === searchRequestId) showSearchLoading(false);
     }
   }
 
@@ -176,12 +183,15 @@ const App = (() => {
           document.getElementById('attendance-badge').textContent = 'Checked In ✓';
           document.getElementById('attendance-badge').className = 'attendance-badge badge-success';
           updateLiveCounter();
+        } else {
+          throw new Error(attendance?.error || 'Attendance could not be recorded');
         }
       } catch (badgeErr) {
         console.error('Badge update error:', badgeErr);
       }
     }).catch(err => {
       console.error('Attendance error:', err);
+      showToast('Check-in could not be recorded. Please inform the registration desk.', 'error', 6000);
       try {
         document.getElementById('attendance-badge').textContent = 'Check-in Error';
         document.getElementById('attendance-badge').className = 'attendance-badge badge-duplicate';
@@ -222,11 +232,11 @@ const App = (() => {
           <div class="contact-fields">
             <div class="contact-field">
               <label for="contact-phone">Phone Number</label>
-              <input type="tel" id="contact-phone" placeholder="+91 98765 43210" autocomplete="off" value="${sanitize(alumni.phone || '')}">
+              <input type="tel" id="contact-phone" placeholder="+91 98765 43210" autocomplete="tel" inputmode="tel" maxlength="25">
             </div>
             <div class="contact-field">
               <label for="contact-email">Email Address</label>
-              <input type="email" id="contact-email" placeholder="yourname@email.com" autocomplete="off" value="${sanitize(alumni.email || '')}">
+              <input type="email" id="contact-email" placeholder="yourname@email.com" autocomplete="email" inputmode="email" maxlength="254">
             </div>
           </div>
           <div class="contact-actions">
@@ -268,6 +278,18 @@ const App = (() => {
       return;
     }
 
+    if (phone && !isValidPhone(phone)) {
+      status.textContent = 'Please enter a valid phone number.';
+      status.className = 'contact-status contact-status-error';
+      return;
+    }
+
+    if (email && !isValidEmail(email)) {
+      status.textContent = 'Please enter a valid email address.';
+      status.className = 'contact-status contact-status-error';
+      return;
+    }
+
     btn.disabled = true;
     btn.textContent = 'Saving...';
     status.textContent = '';
@@ -288,6 +310,14 @@ const App = (() => {
       btn.disabled = false;
       btn.textContent = 'Save & Continue';
     }
+  }
+
+  function isValidPhone(phone) {
+    return /^[+()\d\s-]{7,25}$/.test(phone) && (phone.match(/\d/g) || []).length >= 7;
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
   }
 
   // --- Voice Search ---
@@ -398,7 +428,9 @@ const App = (() => {
       const presEl = document.getElementById('stat-present');
       if (regEl && stats.success) regEl.textContent = stats.totalAlumni;
       if (presEl && stats.success) presEl.textContent = stats.totalAttendance;
-    } catch {}
+    } catch (err) {
+      console.warn('Could not load live statistics:', err.message);
+    }
   }
 
   // --- Event Listeners ---
@@ -417,7 +449,19 @@ const App = (() => {
     const debouncedSearch = debounce((q) => {
       if (q.length >= 2) handleSearch(q);
     }, 400);
-    searchInput.addEventListener('input', (e) => debouncedSearch(e.target.value));
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      searchRequestId++;
+      if (query.length >= 2) {
+        debouncedSearch(query);
+      } else {
+        debouncedSearch.cancel();
+        lastResults = [];
+        const results = document.getElementById('search-results');
+        results.innerHTML = '';
+        results.classList.remove('visible');
+      }
+    });
 
     searchBtn.addEventListener('click', () => handleSearch(searchInput.value));
     voiceBtn.addEventListener('click', startVoiceSearch);

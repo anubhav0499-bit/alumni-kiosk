@@ -50,7 +50,7 @@ function sanitizeUrl(url) {
   if (!url) return '';
   try {
     const parsed = new URL(url);
-    if (['http:', 'https:'].includes(parsed.protocol)) return url;
+    if (['http:', 'https:'].includes(parsed.protocol)) return parsed.href;
   } catch {}
   return '';
 }
@@ -92,10 +92,12 @@ function normalizePhotoUrl(url) {
 
 function debounce(fn, ms) {
   let timer;
-  return function (...args) {
+  function debounced(...args) {
     clearTimeout(timer);
     timer = setTimeout(() => fn.apply(this, args), ms);
-  };
+  }
+  debounced.cancel = () => clearTimeout(timer);
+  return debounced;
 }
 
 // --- Toast notifications ---
@@ -153,6 +155,8 @@ function exportToCsv(data, filename) {
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = filename;
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(link.href);
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }

@@ -14,8 +14,27 @@
 
   <div class="admin-container">
 
+    <section id="admin-login" class="admin-login-card" aria-labelledby="admin-login-title">
+      <h1 id="admin-login-title">Event Dashboard</h1>
+      <p>Enter the admin access code to view attendance records.</p>
+      <form id="admin-login-form">
+        <label for="admin-access-code">Access code</label>
+        <input
+          type="password"
+          id="admin-access-code"
+          class="table-search"
+          autocomplete="off"
+          required
+          aria-describedby="admin-login-status"
+        >
+        <button class="admin-btn admin-btn-primary" id="admin-login-btn" type="submit">Unlock Dashboard</button>
+      </form>
+      <p id="admin-login-status" class="contact-status" role="status" aria-live="polite"></p>
+      <a class="admin-btn admin-btn-outline" href="index.html">Return to Kiosk</a>
+    </section>
+
     <!-- Admin Panel -->
-    <div id="admin-panel">
+    <div id="admin-panel" hidden>
 
       <div class="admin-header">
         <h1>Event Dashboard</h1>
@@ -24,6 +43,7 @@
           <button class="admin-btn admin-btn-primary" onclick="Admin.exportAttendance()">&#8615; Export CSV</button>
           <button class="admin-btn admin-btn-outline" onclick="Admin.testGreeting()">&#128266; Test Voice</button>
           <button class="admin-btn admin-btn-danger" onclick="Admin.resetAttendanceData()">&#9888; Reset</button>
+          <button class="admin-btn admin-btn-outline" onclick="Admin.logout()">Lock</button>
           <a class="admin-btn admin-btn-outline" href="index.html">Kiosk</a>
         </div>
       </div>
@@ -83,7 +103,7 @@
         <div class="settings-row">
           <div class="settings-field" style="flex:2">
             <label>Welcome Message Template</label>
-            <textarea id="greeting-template">Welcome, {title} {name}. We are delighted to welcome you to the {event}. We hope you have a wonderful time reconnecting with your batchmates and faculty.</textarea>
+            <textarea id="greeting-template" maxlength="500">Welcome, {title} {name}. We are delighted to welcome you to the {event}. We hope you have a wonderful time reconnecting with your batchmates and faculty.</textarea>
           </div>
           <button class="admin-btn admin-btn-primary" onclick="Admin.updateGreeting()" style="align-self:flex-end">Update</button>
         </div>
@@ -92,10 +112,10 @@
     </div>
   </div>
 
-  <script src="js/config.js"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/voice.js"></script>
-  <script src="js/search.js"></script>
-  <script src="js/admin.js"></script>
+  <script src="js/config.js?v=18"></script>
+  <script src="js/utils.js?v=18"></script>
+  <script src="js/voice.js?v=18"></script>
+  <script src="js/search.js?v=18"></script>
+  <script src="js/admin.js?v=18"></script>
 </body>
 </html>

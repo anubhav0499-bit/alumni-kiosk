@@ -69,14 +69,28 @@ Add these column headers in Row 1:
    https://script.google.com/macros/s/AKfycb.../exec
    ```
 
+Before deployment, open **Project Settings → Script Properties** and add:
+
+```text
+ADMIN_TOKEN=<a long random token>
+KIOSK_TOKEN=<a different long random token>
+```
+
+Use the same value for the Vercel `BACKEND_ADMIN_TOKEN` environment variable.
+Use `KIOSK_TOKEN` for `BACKEND_KIOSK_TOKEN`. The human-facing Vercel
+`ADMIN_PASSWORD` should be a third secret. Without these Script Properties,
+protected operations remain disabled by design.
+
 ## Step 6: Connect to the Kiosk
 
-Open `frontend/js/config.js` and replace the placeholder:
+Keep `frontend/js/config.js` pointed at `/api` in production. In the Vercel
+project settings, configure:
 
-```js
-api: {
-  baseUrl: 'https://script.google.com/macros/s/AKfycbz1ga5yQvFvzFcHO5bfRLJUeuT7nSquP21XziCoyXuq0_uyeGphJkSjuarbB9F-IcRQ/exec'
-}
+```text
+APPS_SCRIPT_URL=<the web app URL copied above>
+ADMIN_PASSWORD=<admin dashboard access code>
+BACKEND_ADMIN_TOKEN=<the ADMIN_TOKEN Script Property>
+BACKEND_KIOSK_TOKEN=<the KIOSK_TOKEN Script Property>
 ```
 
 ## Step 7: Using Photo URLs

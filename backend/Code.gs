@@ -20,46 +20,76 @@ function getAttendanceSheet() {
 // --- Web App Entry Points ---
 
 function doGet(e) {
-  const action = e.parameter.action;
+  const params = e && e.parameter ? e.parameter : {};
+  const action = params.action;
 
   switch (action) {
     case 'search':
       return jsonResponse(searchAlumni(e.parameter.query));
     case 'getAll':
       return jsonResponse(getAllAlumni());
-    case 'attendance':
-      return jsonResponse(getAttendance());
     case 'checkAttendance':
-      return jsonResponse(checkAttendance(e.parameter.alumniId));
+      const attendance = checkAttendance(params.alumniId);
+      return jsonResponse({
+        success: true,
+        alreadyCheckedIn: attendance.alreadyCheckedIn
+      });
     case 'stats':
       return jsonResponse(getStats());
-    case 'markAttendance':
-      return jsonResponse(markAttendance(e.parameter));
-    case 'resetAttendance':
-      return jsonResponse(resetAttendance());
-    case 'updateContact':
-      return jsonResponse(updateContact(e.parameter));
     default:
-      return jsonResponse({ error: 'Unknown action' });
+      return jsonResponse({ success: false, error: 'Unknown action' });
   }
 }
 
 function doPost(e) {
-  const data = JSON.parse(e.postData.contents);
+  let data;
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch (error) {
+    return jsonResponse({ success: false, error: 'Invalid request body' });
+  }
   const action = data.action;
 
   switch (action) {
+    case 'attendance':
+      return jsonResponse(isAdminRequest(data)
+        ? getAttendance()
+        : { success: false, error: 'Unauthorized' });
     case 'markAttendance':
-      return jsonResponse(markAttendance(data));
+      return jsonResponse(isKioskRequest(data)
+        ? markAttendance(data)
+        : { success: false, error: 'Unauthorized' });
     case 'resetAttendance':
-      return jsonResponse(resetAttendance());
-    case 'bulkSearch':
-      return jsonResponse(bulkSearch(data.queries));
+      return jsonResponse(isAdminRequest(data)
+        ? resetAttendance()
+        : { success: false, error: 'Unauthorized' });
     case 'updateContact':
-      return jsonResponse(updateContact(data));
+      return jsonResponse(isKioskRequest(data)
+        ? updateContact(data)
+        : { success: false, error: 'Unauthorized' });
     default:
-      return jsonResponse({ error: 'Unknown action' });
+      return jsonResponse({ success: false, error: 'Unknown action' });
   }
+}
+
+function isAdminRequest(data) {
+  return isTokenValid('ADMIN_TOKEN', data && data.adminToken);
+}
+
+function isKioskRequest(data) {
+  return isTokenValid('KIOSK_TOKEN', data && data.kioskToken);
+}
+
+function isTokenValid(propertyName, suppliedToken) {
+  const expected = PropertiesService.getScriptProperties().getProperty(propertyName);
+  const actual = suppliedToken ? String(suppliedToken) : '';
+  if (!expected || !actual || expected.length !== actual.length) return false;
+
+  let mismatch = 0;
+  for (let i = 0; i < expected.length; i++) {
+    mismatch |= expected.charCodeAt(i) ^ actual.charCodeAt(i);
+  }
+  return mismatch === 0;
 }
 
 function jsonResponse(data) {
@@ -72,14 +102,16 @@ function jsonResponse(data) {
 
 function getAllAlumni() {
   const sheet = getAlumniSheet();
+  if (!sheet) return { success: false, error: 'Alumni sheet not found', data: [] };
   const data = sheet.getDataRange().getValues();
+  if (!data.length) return { success: true, data: [], count: 0 };
   const normalized = normalizeHeaders(data[0]);
   const alumni = [];
 
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row[0] && !row[1]) continue;
-    alumni.push(rowToAlumni(normalized, row));
+    alumni.push(rowToPublicAlumni(normalized, row));
   }
 
   return { success: true, data: alumni, count: alumni.length };
@@ -91,7 +123,9 @@ function searchAlumni(query) {
   }
 
   const sheet = getAlumniSheet();
+  if (!sheet) return { success: false, error: 'Alumni sheet not found', data: [] };
   const data = sheet.getDataRange().getValues();
+  if (!data.length) return { success: true, data: [], count: 0, query: query };
   const normalized = normalizeHeaders(data[0]);
   const normalizedQuery = normalizeString(query);
   const results = [];
@@ -103,7 +137,7 @@ function searchAlumni(query) {
 
     const score = fuzzyMatch(normalizedQuery, name);
     if (score > 0.4) {
-      const alumni = rowToAlumni(normalized, row);
+      const alumni = rowToPublicAlumni(normalized, row);
       alumni._score = score;
       results.push(alumni);
     }
@@ -145,6 +179,13 @@ function rowToAlumni(normalized, row) {
     achievement: String(row[col('achievement', 11)] || '').trim(),
     phone: phoneIdx !== -1 ? String(row[phoneIdx] || '').trim() : ''
   };
+}
+
+function rowToPublicAlumni(normalized, row) {
+  const alumni = rowToAlumni(normalized, row);
+  delete alumni.email;
+  delete alumni.phone;
+  return alumni;
 }
 
 function normalizeDriveUrl(url) {
@@ -225,54 +266,77 @@ function levenshteinDistance(a, b) {
 // --- Attendance ---
 
 function markAttendance(data) {
-  const alumniId = String(data.alumniId).trim();
-  const name = String(data.name).trim();
-  const batch = String(data.batch || '').trim();
-  const program = String(data.program || '').trim();
-  const deviceId = String(data.deviceId || '').trim();
+  const alumniId = String(data && data.alumniId || '').trim().slice(0, 100);
+  const deviceId = String(data && data.deviceId || '').trim().slice(0, 100);
 
-  if (!alumniId || !name) {
-    return { success: false, error: 'Missing required fields' };
+  if (!alumniId) {
+    return { success: false, error: 'Missing alumni ID' };
   }
 
-  const existing = checkAttendance(alumniId);
-  if (existing.alreadyCheckedIn) {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return { success: false, error: 'Server busy, please try again' };
+
+  try {
+    const alumniSheet = getAlumniSheet();
+    if (!alumniSheet) return { success: false, error: 'Alumni sheet not found' };
+    const alumniData = alumniSheet.getDataRange().getValues();
+    const headers = normalizeHeaders(alumniData[0] || []);
+    const idColumn = headers.indexOf('alumniid');
+    if (idColumn === -1) return { success: false, error: 'Alumni ID column not found' };
+
+    let alumni = null;
+    for (let i = 1; i < alumniData.length; i++) {
+      if (String(alumniData[i][idColumn]).trim() === alumniId) {
+        alumni = rowToAlumni(headers, alumniData[i]);
+        break;
+      }
+    }
+    if (!alumni) return { success: false, error: 'Alumni not found' };
+
+    const existing = checkAttendance(alumniId);
+    if (existing.alreadyCheckedIn) {
+      return {
+        success: false,
+        alreadyCheckedIn: true,
+        timestamp: existing.timestamp,
+        error: 'Already checked in'
+      };
+    }
+
+    const sheet = getAttendanceSheet();
+    if (!sheet) return { success: false, error: 'Attendance sheet not found' };
+    const timestamp = new Date();
+
+    sheet.appendRow([
+      timestamp,
+      alumni.alumniId,
+      alumni.name,
+      alumni.batch,
+      alumni.program,
+      'Present',
+      deviceId
+    ]);
+
     return {
-      success: false,
-      alreadyCheckedIn: true,
-      timestamp: existing.timestamp,
-      error: 'Already checked in'
+      success: true,
+      timestamp: timestamp.toISOString(),
+      message: 'Attendance recorded'
     };
+  } finally {
+    lock.releaseLock();
   }
-
-  const sheet = getAttendanceSheet();
-  const timestamp = new Date();
-
-  sheet.appendRow([
-    timestamp,
-    alumniId,
-    name,
-    batch,
-    program,
-    'Present',
-    deviceId
-  ]);
-
-  return {
-    success: true,
-    timestamp: timestamp.toISOString(),
-    message: 'Attendance recorded'
-  };
 }
 
 function updateContact(data) {
-  if (data.alumniId == null) return { success: false, error: 'Missing alumni ID' };
+  if (!data || data.alumniId == null) return { success: false, error: 'Missing alumni ID' };
   const alumniId = String(data.alumniId).trim();
   const phone = String(data.phone || '').trim();
   const email = String(data.email || '').trim();
 
   if (!alumniId) return { success: false, error: 'Missing alumni ID' };
   if (!phone && !email) return { success: false, error: 'No contact details provided' };
+  if (phone && !isValidPhone(phone)) return { success: false, error: 'Invalid phone number' };
+  if (email && !isValidEmail(email)) return { success: false, error: 'Invalid email address' };
 
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) return { success: false, error: 'Server busy, please try again' };
@@ -299,8 +363,8 @@ function updateContact(data) {
     if (idCol === -1) return { success: false, error: 'Alumni ID column not found in sheet' };
     for (let i = 1; i < allData.length; i++) {
       if (String(allData[i][idCol]).trim() === alumniId) {
-        if (phone) sheet.getRange(i + 1, phoneCol + 1).setValue(phone);
-        if (email) sheet.getRange(i + 1, emailCol + 1).setValue(email);
+        if (phone) sheet.getRange(i + 1, phoneCol + 1).setNumberFormat('@').setValue(phone);
+        if (email) sheet.getRange(i + 1, emailCol + 1).setNumberFormat('@').setValue(email);
         return { success: true, message: 'Contact details updated' };
       }
     }
@@ -311,8 +375,19 @@ function updateContact(data) {
   }
 }
 
+function isValidPhone(phone) {
+  if (phone.length > 25 || !/^[+()\d\s-]+$/.test(phone)) return false;
+  const digits = phone.replace(/\D/g, '');
+  return digits.length >= 7 && digits.length <= 15;
+}
+
+function isValidEmail(email) {
+  return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 function checkAttendance(alumniId) {
   const sheet = getAttendanceSheet();
+  if (!sheet) return { alreadyCheckedIn: false };
   const data = sheet.getDataRange().getValues();
 
   for (let i = 1; i < data.length; i++) {
@@ -330,11 +405,12 @@ function checkAttendance(alumniId) {
 
 function getAttendance() {
   const sheet = getAttendanceSheet();
+  if (!sheet) return { success: false, error: 'Attendance sheet not found', data: [] };
   const data = sheet.getDataRange().getValues();
-  const headers = data[0];
   const records = [];
 
   for (let i = 1; i < data.length; i++) {
+    if (!data[i][0] && !data[i][1]) continue;
     records.push({
       timestamp: data[i][0],
       alumniId: String(data[i][1]),
@@ -352,19 +428,26 @@ function getAttendance() {
 function getStats() {
   const alumniSheet = getAlumniSheet();
   const attendanceSheet = getAttendanceSheet();
+  if (!alumniSheet || !attendanceSheet) {
+    return { success: false, error: 'Required sheet not found' };
+  }
 
-  const totalAlumni = alumniSheet.getLastRow() - 1;
-  const totalAttendance = attendanceSheet.getLastRow() - 1;
-
+  const alumniData = alumniSheet.getDataRange().getValues();
   const attendanceData = attendanceSheet.getDataRange().getValues();
+  const totalAlumni = alumniData.slice(1).filter(function(row) {
+    return row[0] || row[1];
+  }).length;
+  let totalAttendance = 0;
   const batchWise = {};
   const programWise = {};
 
   for (let i = 1; i < attendanceData.length; i++) {
+    if (!attendanceData[i][0] && !attendanceData[i][1]) continue;
+    totalAttendance++;
     const batch = String(attendanceData[i][3]);
     const program = String(attendanceData[i][4]);
-    batchWise[batch] = (batchWise[batch] || 0) + 1;
-    programWise[program] = (programWise[program] || 0) + 1;
+    batchWise[batch || 'Unknown'] = (batchWise[batch || 'Unknown'] || 0) + 1;
+    programWise[program || 'Unknown'] = (programWise[program || 'Unknown'] || 0) + 1;
   }
 
   return {
@@ -379,6 +462,7 @@ function getStats() {
 
 function resetAttendance() {
   const sheet = getAttendanceSheet();
+  if (!sheet) return { success: false, error: 'Attendance sheet not found' };
   const lastRow = sheet.getLastRow();
   if (lastRow > 1) {
     sheet.deleteRows(2, lastRow - 1);

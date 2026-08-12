@@ -26,17 +26,25 @@ A modern, responsive web application for self-service alumni check-in at live ev
    - Who has access: **Anyone**
 4. Click **Deploy** and copy the web app URL.
 
-### 3. Configure the Frontend
+### 3. Configure the Deployment
 
-Edit `frontend/js/config.js` and set:
+The browser calls the same-origin Vercel function at `/api`. Configure these
+server-side environment variables in Vercel:
 
-```js
-api: {
-  baseUrl: 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE'
-}
+```text
+APPS_SCRIPT_URL=<deployed Apps Script /exec URL>
+ADMIN_PASSWORD=<access code used to unlock admin.html>
+BACKEND_ADMIN_TOKEN=<long random machine token>
+BACKEND_KIOSK_TOKEN=<a different long random machine token>
 ```
 
-Update event details, colors, and greeting template as needed.
+In Apps Script, add Script Properties named `ADMIN_TOKEN` and `KIOSK_TOKEN`
+with the same values as `BACKEND_ADMIN_TOKEN` and `BACKEND_KIOSK_TOKEN`.
+Deploy a new Apps Script version after backend changes. Never put any of these
+secrets in `frontend/js/config.js` or commit them.
+
+Event details, colors, and the greeting template remain configurable in
+`frontend/js/config.js`.
 
 ### 4. Host the Frontend
 
@@ -75,7 +83,8 @@ alumni-kiosk/
 │   └── assets/             # Logos, banners (add your own)
 ├── backend/
 │   └── Code.gs             # Google Apps Script backend
-├── config.json             # Reference configuration
+├── api/index.js            # Vercel API proxy and admin gate
+├── vercel.json             # Hosting and security headers
 └── README.md
 ```
 
@@ -88,15 +97,13 @@ All settings are in `frontend/js/config.js`:
 | `event.title` | Event name shown on home screen |
 | `event.subtitle` | Tagline |
 | `event.institution` | Institution name |
-| `event.logoUrl` | URL to institution logo image |
+| `event.bannerUrl` | Optional event banner URL |
 | `greeting.template` | TTS greeting (`{title}`, `{name}`, `{event}` are replaced) |
 | `greeting.rate` | Speech speed (0.1–10, default 0.95) |
 | `greeting.pitch` | Voice pitch (0–2, default 1.0) |
 | `greeting.chimeEnabled` | Play welcome chime before greeting |
-| `admin.password` | Admin panel password |
-| `api.baseUrl` | Google Apps Script web app URL |
-| `kiosk.inactivityTimeout` | Seconds before auto-return to home (default 15) |
-| `kiosk.theme` | `light` or `dark` |
+| `api.baseUrl` | Same-origin API path in production |
+| `kiosk.inactivityTimeout` | Seconds before auto-return to home (default 60) |
 | `kiosk.deviceId` | Identifier for this kiosk terminal |
 | `colors.primary` | Primary brand color |
 | `colors.secondary` | Secondary brand color |
@@ -120,19 +127,19 @@ All settings are in `frontend/js/config.js`:
 - **Touch-friendly** — large buttons, 56px minimum touch targets
 - **Responsive** — works on 24–32" kiosk displays down to mobile
 - **Accessibility** — keyboard navigation, ARIA labels, high-contrast support, reduced motion
-- **Security** — input sanitization, URL validation, no exposed credentials
+- **Security** — server-side admin gate, private-field redaction, POST-only mutations, input sanitization, and URL validation
 
 ## Admin Panel
 
 Navigate to `admin.html` (or click the gear icon on the kiosk).
 
-- **Password:** set in `config.js` (default: `ssbf2026admin`)
+- **Access code:** set only in Vercel as `ADMIN_PASSWORD`
 - **View** real-time attendance with batch/program charts
 - **Search/filter** attendance records
 - **Export** attendance to CSV
 - **Test** voice greeting
-- **Update** greeting message for the session
-- **Reset** all attendance records
+- **Update** the browser-local greeting used by that kiosk
+- **Reset** all attendance records (requires Vercel and Apps Script authorization)
 
 ## Browser Requirements
 

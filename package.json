@@ -1,0 +1,8 @@
+{
+  "name": "alumni-kiosk",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node --check api/index.js && node --check frontend/js/search.js && node --check frontend/js/app.js && node --check frontend/js/admin.js && node --check frontend/js/utils.js"
+  }
+}

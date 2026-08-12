@@ -5,23 +5,40 @@ const Search = (() => {
   let cacheTimestamp = 0;
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-  async function fetchFromApi(action, params = {}) {
+  async function fetchFromApi(action, {
+    params = {},
+    method = 'GET',
+    body = null,
+    adminKey = ''
+  } = {}) {
     if (!isOnline()) throw new Error('No internet connection');
     const url = new URL(CONFIG.api.baseUrl, window.location.origin);
-    url.searchParams.set('action', action);
-    for (const [k, v] of Object.entries(params)) {
-      url.searchParams.set(k, v);
+    if (method === 'GET') {
+      url.searchParams.set('action', action);
+      for (const [k, v] of Object.entries(params)) {
+        url.searchParams.set(k, v);
+      }
     }
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
+    const timeout = setTimeout(() => controller.abort(), 28000);
     try {
-      const res = await fetch(url.toString(), { signal: controller.signal });
-      clearTimeout(timeout);
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
-      return res.json();
+      const headers = {};
+      if (method === 'POST') headers['Content-Type'] = 'application/json';
+      if (adminKey) headers['X-Admin-Key'] = adminKey;
+      const res = await fetch(url.toString(), {
+        method,
+        headers,
+        body: method === 'POST' ? JSON.stringify({ action, ...body }) : undefined,
+        cache: action === 'getAll' || action === 'search' ? 'default' : 'no-store',
+        signal: controller.signal
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.error || `API error: ${res.status}`);
+      return result;
     } catch (err) {
-      clearTimeout(timeout);
       throw err.name === 'AbortError' ? new Error('Request timed out') : err;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
@@ -31,10 +48,9 @@ const Search = (() => {
       return cachedAlumni;
     }
     const result = await fetchFromApi('getAll');
-    if (result.success) {
-      cachedAlumni = result.data;
-      cacheTimestamp = Date.now();
-    }
+    if (!result.success) throw new Error(result.error || 'Could not load alumni data');
+    cachedAlumni = result.data || [];
+    cacheTimestamp = Date.now();
     return cachedAlumni;
   }
 
@@ -53,55 +69,42 @@ const Search = (() => {
     }
 
     // Fall back to server
-    const result = await fetchFromApi('search', { query });
-    return result.success ? result.data : [];
+    const result = await fetchFromApi('search', { params: { query } });
+    if (!result.success) throw new Error(result.error || 'Search failed');
+    return result.data || [];
   }
 
   async function markAttendance(alumni) {
     return fetchFromApi('markAttendance', {
+      method: 'POST',
+      body: {
       alumniId: alumni.alumniId,
-      name: alumni.name,
-      batch: alumni.batch,
-      program: alumni.program,
       deviceId: CONFIG.kiosk.deviceId
+      }
     });
   }
 
   async function checkAttendance(alumniId) {
-    return fetchFromApi('checkAttendance', { alumniId });
+    return fetchFromApi('checkAttendance', { params: { alumniId } });
   }
 
-  async function getAttendance() {
-    return fetchFromApi('attendance');
+  async function getAttendance(adminKey) {
+    return fetchFromApi('attendance', { method: 'POST', body: {}, adminKey });
   }
 
   async function getStats() {
     return fetchFromApi('stats');
   }
 
-  async function resetAttendance() {
-    return fetchFromApi('resetAttendance');
+  async function resetAttendance(adminKey) {
+    return fetchFromApi('resetAttendance', { method: 'POST', body: {}, adminKey });
   }
 
   async function updateContact({ alumniId, phone, email }) {
-    if (!isOnline()) throw new Error('No internet connection');
-    const url = new URL(CONFIG.api.baseUrl, window.location.origin);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
-    try {
-      const res = await fetch(url.toString(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'updateContact', alumniId, phone, email }),
-        signal: controller.signal
-      });
-      clearTimeout(timeout);
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
-      return res.json();
-    } catch (err) {
-      clearTimeout(timeout);
-      throw err.name === 'AbortError' ? new Error('Request timed out') : err;
-    }
+    return fetchFromApi('updateContact', {
+      method: 'POST',
+      body: { alumniId, phone, email }
+    });
   }
 
   function clearCache() {
