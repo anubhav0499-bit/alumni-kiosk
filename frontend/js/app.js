@@ -161,7 +161,6 @@ const App = (() => {
   }
 
   async function selectAlumni(alumni) {
-    await showLoadingScreen();
     showScreen('profile-screen');
     renderProfile(alumni);
 
