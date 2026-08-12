@@ -24,7 +24,7 @@ const CONFIG = {
   },
 
   kiosk: {
-    inactivityTimeout: 15,
+    inactivityTimeout: 60,
     language: 'en',
     deviceId: 'KIOSK-01'
   },
