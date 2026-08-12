@@ -172,24 +172,13 @@ const App = (() => {
     Search.markAttendance(alumni).then(attendance => {
       try {
         if (attendance?.alreadyCheckedIn) {
-          showToast('You have already checked in.', 'warning', 5000);
           document.getElementById('attendance-badge').textContent = 'Already Checked In';
           document.getElementById('attendance-badge').className = 'attendance-badge badge-duplicate';
         } else if (attendance?.success) {
-          document.getElementById('attendance-badge').textContent = 'Checked In ✓';
-          document.getElementById('attendance-badge').className = 'attendance-badge badge-success';
           updateLiveCounter();
         }
-      } catch (badgeErr) {
-        console.error('Badge update error:', badgeErr);
-      }
-    }).catch(err => {
-      console.error('Attendance error:', err);
-      try {
-        document.getElementById('attendance-badge').textContent = 'Check-in Error';
-        document.getElementById('attendance-badge').className = 'attendance-badge badge-duplicate';
       } catch {}
-    });
+    }).catch(() => {});
   }
 
   function renderProfile(alumni) {
@@ -208,7 +197,7 @@ const App = (() => {
           </div>
           <h1 class="profile-name">${sanitize(alumni.name)}</h1>
           <p class="profile-designation">${sanitize(alumni.designation || '')}${alumni.designation && alumni.company ? ' at ' : ''}${sanitize(alumni.company || '')}</p>
-          <div id="attendance-badge" class="attendance-badge badge-pending">Recording...</div>
+          <div id="attendance-badge" class="attendance-badge badge-success">Checked In ✓</div>
         </div>
         <div class="profile-details">
           ${profileField('Program', alumni.program)}
