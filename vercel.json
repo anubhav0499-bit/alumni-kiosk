@@ -1,3 +1,9 @@
 {
-  "outputDirectory": "frontend"
+  "outputDirectory": "frontend",
+  "rewrites": [
+    {
+      "source": "/api",
+      "destination": "https://script.google.com/macros/s/AKfycbw8Z1pUDnuef1Rqgk0XgmLR4QrXzYF89Vx4hprJ5mWLnd0v3rytfIS6YSqQtGEez9C5/exec"
+    }
+  ]
 }

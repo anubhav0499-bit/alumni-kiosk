@@ -18,7 +18,9 @@ const CONFIG = {
   },
 
   api: {
-    baseUrl: 'https://script.google.com/macros/s/AKfycbw8Z1pUDnuef1Rqgk0XgmLR4QrXzYF89Vx4hprJ5mWLnd0v3rytfIS6YSqQtGEez9C5/exec'
+    baseUrl: location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      ? 'https://script.google.com/macros/s/AKfycbw8Z1pUDnuef1Rqgk0XgmLR4QrXzYF89Vx4hprJ5mWLnd0v3rytfIS6YSqQtGEez9C5/exec'
+      : '/api'
   },
 
   kiosk: {
