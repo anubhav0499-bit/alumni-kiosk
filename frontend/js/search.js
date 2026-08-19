@@ -114,6 +114,15 @@ const Search = (() => {
     return fetchFromApi('updateContact', { alumniId, phone: phone || '', email: email || '' });
   }
 
+  function addAlumni(data) {
+    return fetchFromApi('addAlumni', {
+      name: data.name || '', program: data.program || '', batch: data.batch || '',
+      company: data.company || '', designation: data.designation || '',
+      city: data.city || '', email: data.email || '', phone: data.phone || '',
+      deviceId: CONFIG.kiosk.deviceId
+    });
+  }
+
   function clearCache() {
     cachedAlumni = [];
     cacheTimestamp = 0;
@@ -126,6 +135,6 @@ const Search = (() => {
 
   return {
     loadAllAlumni, searchAlumni, markAttendance, checkAttendance,
-    getAttendance, getStats, resetAttendance, updateContact, clearCache, getCachedCount
+    getAttendance, getStats, resetAttendance, updateContact, addAlumni, clearCache, getCachedCount
   };
 })();

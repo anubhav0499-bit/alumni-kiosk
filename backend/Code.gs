@@ -39,6 +39,8 @@ function doGet(e) {
       return jsonResponse(resetAttendance());
     case 'updateContact':
       return jsonResponse(updateContact(e.parameter));
+    case 'addAlumni':
+      return jsonResponse(addAlumni(e.parameter));
     default:
       return jsonResponse({ error: 'Unknown action' });
   }
@@ -306,6 +308,58 @@ function updateContact(data) {
     }
 
     return { success: false, error: 'Alumni not found' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function addAlumni(data) {
+  var name = String(data.name || '').trim();
+  if (!name) return { success: false, error: 'Name is required' };
+
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return { success: false, error: 'Server busy' };
+
+  try {
+    var sheet = getAlumniSheet();
+    var lastRow = sheet.getLastRow();
+    var maxId = 0;
+    if (lastRow > 1) {
+      var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (var i = 0; i < ids.length; i++) {
+        var m = String(ids[i][0]).match(/ALU(\d+)/);
+        if (m) maxId = Math.max(maxId, parseInt(m[1]));
+      }
+    }
+    var alumniId = 'ALU' + String(maxId + 1).padStart(3, '0');
+
+    var program = String(data.program || '').trim();
+    var batch = String(data.batch || '').trim();
+    var company = String(data.company || '').trim();
+    var designation = String(data.designation || '').trim();
+    var city = String(data.city || '').trim();
+    var email = String(data.email || '').trim();
+    var phone = String(data.phone || '').trim();
+
+    var headers = normalizeHeaders(sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]);
+    if (headers.indexOf('phone') === -1) {
+      sheet.getRange(1, headers.length + 1).setValue('Phone');
+    }
+
+    sheet.appendRow([alumniId, name, '', program, batch, '', company, designation, city, email, '', '', phone]);
+
+    var attSheet = getAttendanceSheet();
+    attSheet.appendRow([new Date(), alumniId, name, batch, program, 'Present', String(data.deviceId || '')]);
+
+    return {
+      success: true,
+      data: {
+        alumniId: alumniId, name: name, photoUrl: '', program: program,
+        batch: batch, graduationYear: '', company: company,
+        designation: designation, city: city, email: email,
+        linkedin: '', achievement: '', phone: phone
+      }
+    };
   } finally {
     lock.releaseLock();
   }

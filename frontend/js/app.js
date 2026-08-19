@@ -105,18 +105,25 @@ const App = (() => {
           </button>
         `).join('')}
       </div>
+      <div class="register-prompt">
+        <p>Not in the list? <a href="#" onclick="event.preventDefault();App.showRegistrationForm()">Register here</a></p>
+      </div>
     `;
     container.classList.add('visible');
   }
 
   function showNoResults() {
     const container = document.getElementById('search-results');
+    const prefill = document.getElementById('search-input').value.trim();
     container.innerHTML = `
       <div class="no-results">
         <div class="no-results-icon">&#128533;</div>
         <h3>No Match Found</h3>
-        <p>Sorry, we couldn't find your details.<br>Please contact the registration desk.</p>
-        <button class="btn btn-primary" onclick="App.goHome()">Try Again</button>
+        <p>Sorry, we couldn't find your details.</p>
+        <div class="no-results-actions">
+          <button class="btn btn-primary" onclick="App.showRegistrationForm('${sanitize(prefill).replace(/'/g, "\\'")}')">Register & Check In</button>
+          <button class="btn btn-secondary" onclick="App.goHome()">Try Again</button>
+        </div>
       </div>
     `;
     container.classList.add('visible');
@@ -285,6 +292,117 @@ const App = (() => {
     }
   }
 
+  // --- Walk-in Registration ---
+
+  function showRegistrationForm(prefillName) {
+    const container = document.getElementById('search-results');
+    container.innerHTML = `
+      <div class="registration-form animate-in">
+        <h3>Register & Check In</h3>
+        <p class="reg-subtitle">Not pre-registered? No problem — enter your details below.</p>
+        <div class="contact-fields">
+          <div class="contact-field">
+            <label for="reg-name">Full Name *</label>
+            <input type="text" id="reg-name" placeholder="Enter your full name" autocomplete="off" value="${sanitize(prefillName || '')}">
+          </div>
+          <div class="contact-field">
+            <label for="reg-phone">Phone Number *</label>
+            <input type="tel" id="reg-phone" placeholder="+91 98765 43210" autocomplete="off">
+          </div>
+          <div class="contact-field">
+            <label for="reg-email">Email Address</label>
+            <input type="email" id="reg-email" placeholder="yourname@email.com" autocomplete="off">
+          </div>
+          <div class="contact-field">
+            <label for="reg-program">Program</label>
+            <select id="reg-program">
+              <option value="">Select program</option>
+              <option value="MBA Banking & Finance">MBA Banking & Finance</option>
+              <option value="MBA Finance">MBA Finance</option>
+            </select>
+          </div>
+          <div class="contact-field">
+            <label for="reg-batch">Batch</label>
+            <input type="text" id="reg-batch" placeholder="e.g. 2020-22" autocomplete="off">
+          </div>
+          <div class="contact-field">
+            <label for="reg-company">Company</label>
+            <input type="text" id="reg-company" placeholder="Current company" autocomplete="off">
+          </div>
+          <div class="contact-field">
+            <label for="reg-designation">Designation</label>
+            <input type="text" id="reg-designation" placeholder="Current role" autocomplete="off">
+          </div>
+          <div class="contact-field">
+            <label for="reg-city">City</label>
+            <input type="text" id="reg-city" placeholder="Current city" autocomplete="off">
+          </div>
+        </div>
+        <div class="contact-actions">
+          <button class="btn btn-primary contact-submit-btn" id="reg-submit-btn" onclick="App.submitRegistration()">Register & Check In</button>
+          <button class="btn btn-secondary" onclick="App.goHome()">Cancel</button>
+        </div>
+        <div id="reg-status" class="contact-status"></div>
+      </div>
+    `;
+    container.classList.add('visible');
+    if (!prefillName) document.getElementById('reg-name').focus();
+  }
+
+  async function submitRegistration() {
+    const name = document.getElementById('reg-name').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const program = document.getElementById('reg-program').value;
+    const batch = document.getElementById('reg-batch').value.trim();
+    const company = document.getElementById('reg-company').value.trim();
+    const designation = document.getElementById('reg-designation').value.trim();
+    const city = document.getElementById('reg-city').value.trim();
+
+    const btn = document.getElementById('reg-submit-btn');
+    const status = document.getElementById('reg-status');
+
+    if (!name) {
+      status.textContent = 'Please enter your name.';
+      status.className = 'contact-status contact-status-error';
+      return;
+    }
+    if (!phone) {
+      status.textContent = 'Please enter your phone number.';
+      status.className = 'contact-status contact-status-error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Registering...';
+    status.textContent = '';
+
+    try {
+      const result = await Search.addAlumni({ name, phone, email, program, batch, company, designation, city });
+      if (!result.success) throw new Error(result.error || 'Registration failed');
+
+      Search.clearCache();
+      const alumni = result.data;
+
+      showScreen('profile-screen');
+      renderProfile(alumni);
+
+      const counter = document.getElementById('live-counter');
+      const presEl = document.getElementById('stat-present');
+      const prev = parseInt(presEl?.textContent) || 0;
+      const next = prev + 1;
+      if (presEl) presEl.textContent = next;
+      if (counter) counter.textContent = `${next} checked in`;
+
+      Voice.greet(alumni).catch(() => {});
+    } catch (err) {
+      status.textContent = 'Could not register. Please inform the desk.';
+      status.className = 'contact-status contact-status-error';
+      btn.disabled = false;
+      btn.textContent = 'Register & Check In';
+    }
+  }
+
   // --- Voice Search ---
 
   function startVoiceSearch() {
@@ -442,8 +560,8 @@ const App = (() => {
 
   return {
     init, goHome, handleSearch, selectAlumni, selectResult,
-    submitContactUpdate, startVoiceSearch, toggleFullscreen,
-    getSearchHistory: () => searchHistory
+    submitContactUpdate, showRegistrationForm, submitRegistration,
+    startVoiceSearch, toggleFullscreen, getSearchHistory: () => searchHistory
   };
 })();
 
