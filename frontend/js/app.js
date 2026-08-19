@@ -318,7 +318,6 @@ const App = (() => {
             <select id="reg-program">
               <option value="">Select program</option>
               <option value="MBA Banking & Finance">MBA Banking & Finance</option>
-              <option value="MBA Finance">MBA Finance</option>
             </select>
           </div>
           <div class="contact-field">
