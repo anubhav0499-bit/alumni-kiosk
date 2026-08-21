@@ -52,7 +52,7 @@
 
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(168, 85, 232, ${glow})`;
+      ctx.fillStyle = `rgba(45, 212, 191, ${glow})`;
       ctx.fill();
 
       // Connection lines
@@ -66,7 +66,7 @@
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(q.x, q.y);
-          ctx.strokeStyle = `rgba(168, 85, 232, ${lineAlpha})`;
+          ctx.strokeStyle = `rgba(45, 212, 191, ${lineAlpha})`;
           ctx.lineWidth = 0.5;
           ctx.stroke();
         }

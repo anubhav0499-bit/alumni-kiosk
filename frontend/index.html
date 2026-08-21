@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="description" content="Yaadein 2026 — SSBF Alumni Meet Welcome Kiosk">
-  <meta name="theme-color" content="#04030E">
+  <meta name="theme-color" content="#030B15">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <title>Yaadein 2026 — SSBF Alumni Meet</title>
-  <link rel="stylesheet" href="css/styles.css?v=15">
+  <link rel="stylesheet" href="css/styles.css?v=17">
 </head>
 <body>
   <!-- Particle canvas background -->
@@ -23,8 +23,8 @@
       <a class="toolbar-btn" href="admin.html" title="Admin" aria-label="Admin panel">&#9881;</a>
     </div>
 
-    <!-- Live Counter -->
-    <div class="live-counter" aria-live="polite">
+    <!-- Live Counter (hidden) -->
+    <div class="live-counter" aria-live="polite" style="display:none">
       <span class="counter-pulse"></span>
       <span id="live-counter">0 checked in</span>
     </div>
@@ -32,11 +32,6 @@
     <!-- Home Screen -->
     <div class="screen active" id="home-screen">
       <div class="home-content">
-
-        <div class="event-badge" id="event-badge">
-          <span class="event-badge-dot"></span>
-          SSBF Alumni Meet
-        </div>
 
         <h1 class="event-title glitch-text" id="event-title">Yaadein 2026</h1>
         <p class="event-subtitle" id="event-subtitle">Reconnect. Reimagine. Rejoice.</p>
@@ -74,12 +69,15 @@
         <div class="floating-stats">
           <div class="floating-stat">
             <span class="floating-stat-value" id="stat-registered">0</span>
-            <span class="floating-stat-label">Registered</span>
+            <span class="floating-stat-label">Registered Alumni</span>
           </div>
-          <div class="floating-stat-divider"></div>
           <div class="floating-stat">
             <span class="floating-stat-value" id="stat-present">0</span>
-            <span class="floating-stat-label">Present</span>
+            <span class="floating-stat-label">Checked In Today</span>
+          </div>
+          <div class="floating-stat">
+            <span class="floating-stat-value">Sep '26</span>
+            <span class="floating-stat-label">SSBF Alumni Meet</span>
           </div>
         </div>
       </div>

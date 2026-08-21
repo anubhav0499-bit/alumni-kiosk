@@ -30,9 +30,9 @@ const CONFIG = {
   },
 
   colors: {
-    primary: '#A855E8',
-    secondary: '#5B27BB',
-    accent: '#C084FC',
-    background: '#04030E'
+    primary: '#2DD4BF',
+    secondary: '#0D9488',
+    accent: '#5EEAD4',
+    background: '#030B15'
   }
 };
