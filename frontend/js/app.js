@@ -565,10 +565,13 @@ const App = (() => {
 // --- Finance Floaters ---
 (function initFinanceFloaters() {
   const symbols = [
-    '₹', '$', '€', '£', '¥', '₿', '%',
-    'P/E', 'ROI', 'NAV', 'SIP', 'IPO',
-    'CAGR', 'GDP', 'FDI', 'EPS', 'EBITDA',
-    'α', 'β', 'σ', 'Δ', 'Σ'
+    '₹', '$', '€', '£', '¥', '₿', '¢', '₩', '%', '‰',
+    'P/E', 'ROI', 'NAV', 'SIP', 'IPO', 'IRR', 'NPV', 'APR',
+    'CAGR', 'GDP', 'FDI', 'EPS', 'EBITDA', 'WACC', 'ROCE',
+    'M&A', 'AUM', 'EMI', 'KYC', 'AMC', 'NPA', 'RBI', 'SEBI',
+    'BSE', 'NSE', 'NIFTY', 'SENSEX', 'FOREX', 'REPO', 'CRR',
+    'α', 'β', 'σ', 'Δ', 'Σ', 'μ', 'λ', 'θ', 'π', 'γ',
+    '∞', '√', '∫', '≈', '±', '÷', '×'
   ];
 
   const container = document.createElement('div');
@@ -576,7 +579,7 @@ const App = (() => {
   document.body.appendChild(container);
 
   const used = [];
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 35; i++) {
     let sym;
     do { sym = symbols[Math.floor(Math.random() * symbols.length)]; }
     while (used.length < symbols.length && used.includes(sym));
