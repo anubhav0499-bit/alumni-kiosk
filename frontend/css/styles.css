@@ -718,10 +718,11 @@ body {
   -webkit-backdrop-filter: blur(30px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  padding: 3rem 2.5rem;
-  max-width: 520px;
+  padding: 2.5rem;
+  max-width: 880px;
   width: 100%;
-  text-align: center;
+  display: flex;
+  gap: 2.5rem;
   box-shadow: var(--shadow-lg), var(--shadow-glow);
   position: relative;
   overflow: hidden;
@@ -732,6 +733,26 @@ body {
 @keyframes profileCardEnter {
   from { opacity: 0; transform: translateY(40px) scale(0.95); filter: blur(10px); }
   to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+.profile-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-subtle);
+  padding-right: 2.5rem;
+}
+
+.profile-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .profile-card .profile-photo-wrapper { animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
@@ -757,9 +778,9 @@ body {
 }
 
 .profile-photo-wrapper {
-  width: 130px;
-  height: 130px;
-  margin: 0 auto 1.5rem;
+  width: 110px;
+  height: 110px;
+  margin: 0 0 1.25rem;
   position: relative;
 }
 
@@ -778,16 +799,16 @@ body {
 }
 
 .profile-photo {
-  width: 130px;
-  height: 130px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   object-fit: cover;
   border: 4px solid var(--bg);
 }
 
 .profile-avatar {
-  width: 130px;
-  height: 130px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--secondary), var(--primary));
   color: #fff;
@@ -795,17 +816,17 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: 2.8rem;
+  font-size: 2.4rem;
   font-weight: 700;
   border: 4px solid var(--bg);
 }
 
 .profile-name {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: var(--text);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.25rem;
   letter-spacing: -0.02em;
 }
 
@@ -817,11 +838,11 @@ body {
 
 .attendance-badge {
   display: inline-block;
-  padding: 0.4rem 1.2rem;
+  padding: 0.35rem 1rem;
   border-radius: var(--radius);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
   letter-spacing: 0.02em;
 }
 
@@ -853,8 +874,8 @@ body {
 .profile-details {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 0;
   text-align: left;
 }
 
@@ -1304,11 +1325,11 @@ body {
 
 /* --- Contact Update Form --- */
 .contact-update-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--border-subtle);
   width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
 .contact-update-title {
@@ -1327,10 +1348,10 @@ body {
 }
 
 .contact-fields {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .contact-field {
@@ -1677,9 +1698,11 @@ body {
   .event-subtitle { font-size: 0.85rem; }
   .search-input { font-size: 0.95rem; padding: 0.85rem 1.2rem; }
   .btn { min-height: 48px; padding: 0.75rem 1.2rem; font-size: 0.95rem; }
-  .profile-card { padding: 2rem 1.5rem; }
+  .profile-card { padding: 2rem 1.5rem; flex-direction: column; }
+  .profile-left { border-right: none; padding-right: 0; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.5rem; min-width: auto; }
   .profile-name { font-size: 1.5rem; }
   .profile-details { grid-template-columns: 1fr; }
+  .contact-fields { grid-template-columns: 1fr; }
   .charts-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .admin-container { padding: 1rem; }

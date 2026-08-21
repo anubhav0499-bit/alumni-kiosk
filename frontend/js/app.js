@@ -199,7 +199,7 @@ const App = (() => {
 
     container.innerHTML = `
       <div class="profile-card animate-in">
-        <div class="profile-header">
+        <div class="profile-left">
           <div class="profile-photo-wrapper">
             ${photoHtml}
             <div class="profile-avatar" ${photoSrc ? 'style="display:none"' : ''}>${getInitials(alumni.name)}</div>
@@ -208,31 +208,32 @@ const App = (() => {
           <p class="profile-designation">${sanitize(alumni.designation || '')}${alumni.designation && alumni.company ? ' at ' : ''}${sanitize(alumni.company || '')}</p>
           <div id="attendance-badge" class="attendance-badge badge-success">Checked In ✓</div>
         </div>
-        <div class="profile-details">
-          ${profileField('Program', alumni.program)}
-          ${profileField('Batch', alumni.batch)}
-          ${profileField('Graduation', alumni.graduationYear)}
-          ${profileField('City', alumni.city)}
-        </div>
-
-        <div class="contact-update-section" id="contact-update">
-          <h3 class="contact-update-title">Update Your Contact Details</h3>
-          <p class="contact-update-subtitle">Help us stay connected</p>
-          <div class="contact-fields">
-            <div class="contact-field">
-              <label for="contact-phone">Phone Number</label>
-              <input type="tel" id="contact-phone" placeholder="+91 98765 43210" autocomplete="off" value="${sanitize(alumni.phone || '')}">
-            </div>
-            <div class="contact-field">
-              <label for="contact-email">Email Address</label>
-              <input type="email" id="contact-email" placeholder="yourname@email.com" autocomplete="off" value="${sanitize(alumni.email || '')}">
-            </div>
+        <div class="profile-right">
+          <div class="profile-details">
+            ${profileField('Program', alumni.program)}
+            ${profileField('Batch', alumni.batch)}
+            ${profileField('Graduation', alumni.graduationYear)}
+            ${profileField('City', alumni.city)}
           </div>
-          <div class="contact-actions">
-            <button class="btn btn-primary contact-submit-btn" id="contact-submit-btn" onclick="App.submitContactUpdate('${sanitize(alumni.alumniId).replace(/'/g, "\\'")}')">Save & Continue</button>
-            <button class="btn btn-secondary" onclick="App.goHome()">Skip</button>
+          <div class="contact-update-section" id="contact-update">
+            <h3 class="contact-update-title">Update Your Contact Details</h3>
+            <p class="contact-update-subtitle">Help us stay connected</p>
+            <div class="contact-fields">
+              <div class="contact-field">
+                <label for="contact-phone">Phone Number</label>
+                <input type="tel" id="contact-phone" placeholder="+91 98765 43210" autocomplete="off" value="${sanitize(alumni.phone || '')}">
+              </div>
+              <div class="contact-field">
+                <label for="contact-email">Email Address</label>
+                <input type="email" id="contact-email" placeholder="yourname@email.com" autocomplete="off" value="${sanitize(alumni.email || '')}">
+              </div>
+            </div>
+            <div class="contact-actions">
+              <button class="btn btn-primary contact-submit-btn" id="contact-submit-btn" onclick="App.submitContactUpdate('${sanitize(alumni.alumniId).replace(/'/g, "\\'")}')">Save & Continue</button>
+              <button class="btn btn-secondary" onclick="App.goHome()">Skip</button>
+            </div>
+            <div id="contact-status" class="contact-status"></div>
           </div>
-          <div id="contact-status" class="contact-status"></div>
         </div>
       </div>
     `;
