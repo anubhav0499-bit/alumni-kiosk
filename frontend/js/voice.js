@@ -44,20 +44,13 @@ const Voice = (() => {
       utterance.rate = options.rate ?? CONFIG.greeting.rate;
       utterance.pitch = options.pitch ?? CONFIG.greeting.pitch;
       utterance.volume = options.volume ?? CONFIG.greeting.volume;
+      utterance.lang = options.lang || 'en-US';
 
       const voice = bestVoice || findBestVoice();
-      if (voice) {
-        utterance.voice = voice;
-        utterance.lang = voice.lang;
-      } else {
-        utterance.lang = options.lang || 'en-US';
-      }
-
-      console.log('TTS speaking:', JSON.stringify(text), 'voice:', voice?.name || 'default', 'lang:', utterance.lang);
+      if (voice) utterance.voice = voice;
 
       utterance.onend = resolve;
       utterance.onerror = (e) => {
-        console.warn('TTS error:', e.error, 'for text:', text);
         if (e.error === 'canceled') resolve();
         else reject(e);
       };
@@ -86,30 +79,10 @@ const Voice = (() => {
     }
   }
 
-  function ensureVoicesLoaded() {
-    return new Promise(resolve => {
-      const voices = window.speechSynthesis.getVoices();
-      if (voices.length > 0) {
-        if (!bestVoice) bestVoice = findBestVoice();
-        resolve();
-        return;
-      }
-      const onReady = () => {
-        bestVoice = findBestVoice();
-        resolve();
-      };
-      window.speechSynthesis.onvoiceschanged = onReady;
-      setTimeout(resolve, 3000);
-    });
-  }
-
   async function speak(text, options = {}) {
     if (!('speechSynthesis' in window)) throw new Error('Speech synthesis not supported');
 
     window.speechSynthesis.cancel();
-    await new Promise(r => setTimeout(r, 150));
-
-    await ensureVoicesLoaded();
 
     // Split into sentences to avoid Chrome's ~15s cutoff
     const sentences = text.match(/[^.!?]+[.!?]?\s*/g) || [text];
