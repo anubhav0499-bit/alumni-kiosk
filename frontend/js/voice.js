@@ -11,27 +11,35 @@ const Voice = (() => {
 
     const enVoices = voices.filter(v => v.lang.startsWith('en'));
     if (!enVoices.length) return voices[0];
+    const inVoices = enVoices.filter(v => v.lang === 'en-IN');
 
-    // Tier 1: Neural/natural voices (Windows 11 "Online" voices, macOS neural)
+    // Tier 1: Indian English neural/natural voices (Windows 11 "Neerja" etc.)
+    const inNeural = inVoices.find(v => /Online|Natural/i.test(v.name));
+    if (inNeural) return inNeural;
+
+    // Tier 2: Any Indian English voice
+    if (inVoices.length) return inVoices[0];
+
+    // Tier 3: Google Indian English (Chrome)
+    const googleIn = enVoices.find(v => /Google.*India/i.test(v.name));
+    if (googleIn) return googleIn;
+
+    // Tier 4: Neural/natural English voices (any region)
     const neural = enVoices.find(v =>
-      /Online|Natural/i.test(v.name) && /Aria|Jenny|Guy|Ana|Steffan/i.test(v.name)
+      /Online|Natural/i.test(v.name) && /Aria|Jenny|Guy|Ana|Steffan|Neerja/i.test(v.name)
     ) || enVoices.find(v => /Online|Natural/i.test(v.name));
     if (neural) return neural;
 
-    // Tier 2: Google cloud voices (Chrome)
+    // Tier 5: Google cloud voices (Chrome)
     const google = enVoices.find(v => /^Google UK English Female/.test(v.name))
       || enVoices.find(v => /^Google/.test(v.name) && !v.localService);
     if (google) return google;
 
-    // Tier 3: High-quality local voices (macOS/iOS)
-    const premium = enVoices.find(v => /Samantha|Karen|Daniel|Moira|Tessa/i.test(v.name));
-    if (premium) return premium;
-
-    // Tier 4: Any non-local (cloud) English voice
+    // Tier 6: Any non-local (cloud) English voice
     const cloud = enVoices.find(v => !v.localService);
     if (cloud) return cloud;
 
-    // Tier 5: Any English voice, avoid Zira/David (robotic)
+    // Tier 7: Any English voice, avoid Zira/David (robotic)
     const decent = enVoices.find(v => !/Zira|David|Mark/i.test(v.name));
     return decent || enVoices[0];
   }
@@ -44,7 +52,7 @@ const Voice = (() => {
       utterance.rate = options.rate ?? CONFIG.greeting.rate;
       utterance.pitch = options.pitch ?? CONFIG.greeting.pitch;
       utterance.volume = options.volume ?? CONFIG.greeting.volume;
-      utterance.lang = options.lang || 'en-US';
+      utterance.lang = options.lang || 'en-IN';
 
       const voice = bestVoice || findBestVoice();
       if (voice) utterance.voice = voice;
