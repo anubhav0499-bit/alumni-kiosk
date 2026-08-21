@@ -143,8 +143,6 @@ function rowToAlumni(normalized, row) {
     designation: String(row[col('designation', 7)] || '').trim(),
     city: String(row[col('city', 8)] || '').trim(),
     email: String(row[col('email', 9)] || '').trim(),
-    linkedin: String(row[col('linkedin', 10)] || '').trim(),
-    achievement: String(row[col('achievement', 11)] || '').trim(),
     phone: phoneIdx !== -1 ? String(row[phoneIdx] || '').trim() : ''
   };
 }
@@ -357,7 +355,7 @@ function addAlumni(data) {
         alumniId: alumniId, name: name, photoUrl: '', program: program,
         batch: batch, graduationYear: '', company: company,
         designation: designation, city: city, email: email,
-        linkedin: '', achievement: '', phone: phone
+        phone: phone
       }
     };
   } finally {
@@ -451,9 +449,9 @@ function setupSheets() {
     alumni.appendRow([
       'Alumni ID', 'Name', 'Photo URL', 'Program', 'Batch',
       'Graduation Year', 'Company', 'Designation', 'City',
-      'Email', 'LinkedIn', 'Achievement'
+      'Email'
     ]);
-    alumni.getRange(1, 1, 1, 12).setFontWeight('bold').setBackground('#1a237e').setFontColor('#ffffff');
+    alumni.getRange(1, 1, 1, 10).setFontWeight('bold').setBackground('#1a237e').setFontColor('#ffffff');
     alumni.setFrozenRows(1);
 
     // Sample data

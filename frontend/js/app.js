@@ -96,7 +96,6 @@ const App = (() => {
       <div class="results-list">
         ${results.map((a, i) => `
           <button class="result-item" onclick="App.selectResult(${i})">
-            <div class="result-avatar">${getInitials(a.name)}</div>
             <div class="result-info">
               <span class="result-name">${sanitize(a.name)}</span>
               <span class="result-detail">${sanitize(a.program)} | Batch ${sanitize(a.batch)}</span>
@@ -214,9 +213,7 @@ const App = (() => {
           ${profileField('Batch', alumni.batch)}
           ${profileField('Graduation', alumni.graduationYear)}
           ${profileField('City', alumni.city)}
-          ${alumni.achievement ? profileField('Achievement', alumni.achievement, true) : ''}
         </div>
-        ${alumni.linkedin ? `<a href="${sanitizeUrl(alumni.linkedin)}" target="_blank" rel="noopener" class="linkedin-link">View LinkedIn Profile</a>` : ''}
 
         <div class="contact-update-section" id="contact-update">
           <h3 class="contact-update-title">Update Your Contact Details</h3>
