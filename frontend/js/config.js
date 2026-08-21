@@ -11,7 +11,7 @@ const CONFIG = {
   greeting: {
     template: 'Hi {name}. It is our privilege to have you at S.S.B.F.',
     voice: 'default',
-    rate: 0.92,
+    rate: 1,
     pitch: 1.0,
     volume: 1.0,
     chimeEnabled: true
