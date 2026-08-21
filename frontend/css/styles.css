@@ -1808,25 +1808,12 @@ body {
   color: rgba(255, 255, 255, 0.04);
   font-weight: 600;
   user-select: none;
-  animation: floatDrift 40s linear infinite;
-  will-change: transform;
+  animation: floaterPulse 6s ease-in-out infinite;
 }
 
-@keyframes floatDrift {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-110vh) rotate(25deg);
-    opacity: 0;
-  }
+@keyframes floaterPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
 
 /* --- Print --- */
