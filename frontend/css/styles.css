@@ -1805,14 +1805,14 @@ body {
 .finance-floater {
   position: absolute;
   font-family: var(--font-display);
-  color: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.08);
   font-weight: 600;
   user-select: none;
   animation: floaterPulse 6s ease-in-out infinite;
 }
 
 @keyframes floaterPulse {
-  0%, 100% { opacity: 0.3; }
+  0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
 }
 
