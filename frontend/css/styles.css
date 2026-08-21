@@ -1800,6 +1800,8 @@ body {
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  mask-image: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0) 60%);
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0) 60%);
 }
 
 .finance-floater {
@@ -1808,12 +1810,25 @@ body {
   color: rgba(255, 255, 255, 0.08);
   font-weight: 600;
   user-select: none;
-  animation: floaterPulse 6s ease-in-out infinite;
+  animation: floatRise linear infinite;
+  will-change: transform;
 }
 
-@keyframes floaterPulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+@keyframes floatRise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-110vh);
+    opacity: 0;
+  }
 }
 
 /* --- Print --- */

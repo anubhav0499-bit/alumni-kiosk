@@ -578,24 +578,23 @@ const App = (() => {
   container.className = 'finance-floaters';
   document.body.appendChild(container);
 
-  const used = [];
-  for (let i = 0; i < 35; i++) {
-    let sym;
-    do { sym = symbols[Math.floor(Math.random() * symbols.length)]; }
-    while (used.length < symbols.length && used.includes(sym));
-    used.push(sym);
-
+  function spawn() {
     const el = document.createElement('span');
     el.className = 'finance-floater';
-    el.textContent = sym;
-    el.style.left = (5 + Math.random() * 90) + '%';
-    el.style.top = (5 + Math.random() * 90) + '%';
-    el.style.fontSize = (0.7 + Math.random() * 1) + 'rem';
-    el.style.animationDuration = (4 + Math.random() * 6) + 's';
-    el.style.animationDelay = (Math.random() * -8) + 's';
-    el.style.transform = 'rotate(' + (Math.random() * 40 - 20) + 'deg)';
+    el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    el.style.left = (3 + Math.random() * 94) + '%';
+    el.style.bottom = '-30px';
+    el.style.fontSize = (0.65 + Math.random() * 0.9) + 'rem';
+    const dur = 20 + Math.random() * 30;
+    el.style.animationDuration = dur + 's';
     container.appendChild(el);
+    setTimeout(() => el.remove(), dur * 1000);
   }
+
+  for (let i = 0; i < 18; i++) {
+    setTimeout(spawn, Math.random() * 12000);
+  }
+  setInterval(spawn, 2500);
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);
