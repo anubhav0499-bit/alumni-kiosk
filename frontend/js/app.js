@@ -562,4 +562,38 @@ const App = (() => {
   };
 })();
 
+// --- Finance Floaters ---
+(function initFinanceFloaters() {
+  const symbols = [
+    '₹', '$', '€', '£', '¥', '₿', '%',
+    'P/E', 'ROI', 'NAV', 'SIP', 'IPO',
+    'CAGR', 'GDP', 'FDI', 'EPS', 'EBITDA',
+    'α', 'β', 'σ', 'Δ', 'Σ',
+    '📊', '📈'
+  ];
+
+  const container = document.createElement('div');
+  container.className = 'finance-floaters';
+  document.body.appendChild(container);
+
+  function spawn() {
+    const el = document.createElement('span');
+    el.className = 'finance-floater';
+    el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.bottom = '-40px';
+    el.style.fontSize = (0.7 + Math.random() * 1.2) + 'rem';
+    const dur = 25 + Math.random() * 35;
+    el.style.animationDuration = dur + 's';
+    el.style.animationDelay = '0s';
+    container.appendChild(el);
+    setTimeout(() => el.remove(), dur * 1000);
+  }
+
+  for (let i = 0; i < 12; i++) {
+    setTimeout(spawn, Math.random() * 15000);
+  }
+  setInterval(spawn, 4000);
+})();
+
 document.addEventListener('DOMContentLoaded', App.init);

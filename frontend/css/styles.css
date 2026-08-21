@@ -1793,6 +1793,42 @@ body {
   outline-offset: 2px;
 }
 
+/* --- Finance Floaters --- */
+.finance-floaters {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.finance-floater {
+  position: absolute;
+  font-family: var(--font-display);
+  color: rgba(255, 255, 255, 0.04);
+  font-weight: 600;
+  user-select: none;
+  animation: floatDrift 40s linear infinite;
+  will-change: transform;
+}
+
+@keyframes floatDrift {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-110vh) rotate(25deg);
+    opacity: 0;
+  }
+}
+
 /* --- Print --- */
 @media print {
   .toolbar, .live-counter, .search-container, #toast-container,
