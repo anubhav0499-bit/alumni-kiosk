@@ -146,7 +146,7 @@ const Voice = (() => {
         <div class="welcome-sparkle">&#10022;</div>
         <p class="welcome-label">Welcome</p>
         <h2 class="welcome-name">${sanitize(firstName)}</h2>
-        <p class="welcome-message">It is our privilege to have you at <strong>SSBF</strong></p>
+        <p class="welcome-message">Welcome to <strong>Yaadein 2026</strong></p>
         <div class="welcome-sparkle welcome-sparkle-bottom">&#10022;</div>
       </div>
     `;
