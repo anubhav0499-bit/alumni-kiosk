@@ -17,7 +17,6 @@ const Admin = (() => {
       if (!stats.success) return;
       document.getElementById('stat-total').textContent = stats.totalAlumni;
       renderBatchChart(stats.batchWise);
-      renderProgramChart(stats.programWise);
     }).catch(() => {});
 
     loadAttendanceTable();
@@ -39,13 +38,10 @@ const Admin = (() => {
         }
         if (count && !document.getElementById('batch-chart').querySelector('.bar-row')) {
           const batchWise = {};
-          const programWise = {};
           records.forEach(r => {
             if (r.batch) batchWise[r.batch] = (batchWise[r.batch] || 0) + 1;
-            if (r.program) programWise[r.program] = (programWise[r.program] || 0) + 1;
           });
           renderBatchChart(batchWise);
-          renderProgramChart(programWise);
         }
       }
 
@@ -95,22 +91,6 @@ const Admin = (() => {
     `).join('');
   }
 
-  function renderProgramChart(data) {
-    const container = document.getElementById('program-chart');
-    if (!data || !Object.keys(data).length) {
-      container.innerHTML = '<p class="chart-empty">No data yet</p>';
-      return;
-    }
-    const max = Math.max(...Object.values(data));
-    container.innerHTML = Object.entries(data).map(([prog, count]) => `
-      <div class="bar-row">
-        <span class="bar-label">${sanitize(prog)}</span>
-        <div class="bar-track">
-          <div class="bar-fill bar-fill-secondary" style="width:${(count / max) * 100}%">${count}</div>
-        </div>
-      </div>
-    `).join('');
-  }
 
   function exportAttendance() {
     Search.getAttendance().then(result => {
