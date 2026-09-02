@@ -418,19 +418,23 @@ function checkAttendance(alumniId) {
 
 function getAttendance() {
   const sheet = getAttendanceSheet();
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0];
+  const range = sheet.getDataRange();
+  // Timestamps are read as native values so they serialise to ISO and sort
+  // correctly; the text columns are read as displayed so a batch like
+  // "2010-12" does not come back as a parsed Date.
+  const values = range.getValues();
+  const display = range.getDisplayValues();
   const records = [];
 
-  for (let i = 1; i < data.length; i++) {
+  for (let i = 1; i < values.length; i++) {
     records.push({
-      timestamp: data[i][0],
-      alumniId: String(data[i][1]),
-      name: String(data[i][2]),
-      batch: String(data[i][3]),
-      program: String(data[i][4]),
-      status: String(data[i][5]),
-      deviceId: String(data[i][6] || '')
+      timestamp: values[i][0],
+      alumniId: String(display[i][1]),
+      name: String(display[i][2]),
+      batch: String(display[i][3]),
+      program: String(display[i][4]),
+      status: String(display[i][5]),
+      deviceId: String(display[i][6] || '')
     });
   }
 
@@ -444,7 +448,8 @@ function getStats() {
   const totalAlumni = alumniSheet.getLastRow() - 1;
   const totalAttendance = attendanceSheet.getLastRow() - 1;
 
-  const attendanceData = attendanceSheet.getDataRange().getValues();
+  // Displayed text, so batch labels read "2010-12" rather than a parsed Date.
+  const attendanceData = attendanceSheet.getDataRange().getDisplayValues();
   const batchWise = {};
   const programWise = {};
 
