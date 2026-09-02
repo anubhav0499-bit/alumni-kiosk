@@ -77,8 +77,10 @@ module.exports = async function handler(req, res) {
 
     res.setHeader('Content-Type', 'application/json');
     if (CACHEABLE_ACTIONS.has(action)) {
-      const sMax = action === 'getAll' ? 120 : 30;
-      const browserMax = action === 'getAll' ? 60 : 15;
+      // Apps Script latency is high and variable (2-25s), so lean on the edge
+      // cache. The admin panel cache-busts these when it needs fresh numbers.
+      const sMax = action === 'getAll' ? 120 : 60;
+      const browserMax = action === 'getAll' ? 60 : 20;
       res.setHeader('Cache-Control', `public, max-age=${browserMax}, s-maxage=${sMax}, stale-while-revalidate=300`);
     } else {
       res.setHeader('Cache-Control', 'no-store');
