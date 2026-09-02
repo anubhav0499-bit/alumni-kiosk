@@ -205,7 +205,6 @@ const App = (() => {
             <div class="profile-avatar" ${photoSrc ? 'style="display:none"' : ''}>${getInitials(alumni.name)}</div>
           </div>
           <h1 class="profile-name">${sanitize(alumni.name)}</h1>
-          <p class="profile-id">${sanitize(alumni.alumniId || '')}</p>
           <div id="attendance-badge" class="attendance-badge badge-success">Checked In ✓</div>
         </div>
         <div class="profile-right">
