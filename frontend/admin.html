@@ -8,11 +8,33 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=36">
 </head>
 <body>
 
-  <div class="admin-container">
+  <!-- Login Overlay -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-icon">&#9881;</div>
+      <h2 class="login-title">Admin Access</h2>
+      <p class="login-subtitle">Enter your credentials to continue</p>
+      <div class="login-fields">
+        <div class="login-field">
+          <label for="login-user">User ID</label>
+          <input type="text" id="login-user" placeholder="Enter user ID" autocomplete="off" autofocus>
+        </div>
+        <div class="login-field">
+          <label for="login-pass">Password</label>
+          <input type="password" id="login-pass" placeholder="Enter password">
+        </div>
+      </div>
+      <button class="btn btn-primary login-btn" id="login-btn" onclick="attemptLogin()">Sign In</button>
+      <p id="login-error" class="login-error"></p>
+      <a href="index.html" class="login-back">&larr; Back to Kiosk</a>
+    </div>
+  </div>
+
+  <div class="admin-container" id="admin-container" style="display:none">
 
     <!-- Admin Panel -->
     <div id="admin-panel">
@@ -92,10 +114,31 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=20"></script>
-  <script src="js/utils.js?v=20"></script>
-  <script src="js/voice.js?v=20"></script>
-  <script src="js/search.js?v=20"></script>
-  <script src="js/admin.js?v=20"></script>
+  <script>
+    function attemptLogin() {
+      var u = document.getElementById('login-user').value.trim();
+      var p = document.getElementById('login-pass').value;
+      if (u === 'ssbfadmin' && p === 'alumyaadein') {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('admin-container').style.display = '';
+        sessionStorage.setItem('admin_auth', '1');
+        Admin?.init?.();
+      } else {
+        document.getElementById('login-error').textContent = 'Invalid credentials. Please try again.';
+      }
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && document.getElementById('login-overlay').style.display !== 'none') attemptLogin();
+    });
+    if (sessionStorage.getItem('admin_auth') === '1') {
+      document.getElementById('login-overlay').style.display = 'none';
+      document.getElementById('admin-container').style.display = '';
+    }
+  </script>
+  <script src="js/config.js?v=36"></script>
+  <script src="js/utils.js?v=36"></script>
+  <script src="js/voice.js?v=36"></script>
+  <script src="js/search.js?v=36"></script>
+  <script src="js/admin.js?v=36"></script>
 </body>
 </html>
