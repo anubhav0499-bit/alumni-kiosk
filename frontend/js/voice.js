@@ -4,6 +4,46 @@ const Voice = (() => {
   let recognition = null;
   let isListening = false;
   let bestVoice = null;
+  let hindiVoice = null;
+  let hindiVoiceChecked = false;
+
+  const DEVANAGARI_RUN = /[ऀ-ॿ]+(?:[\sऀ-ॿ]*[ऀ-ॿ])?/g;
+
+  // A Hindi voice is what actually pronounces Devanagari correctly; an English
+  // voice either skips it or reads it as noise.
+  function findHindiVoice() {
+    if (hindiVoiceChecked) return hindiVoice;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return null; // not loaded yet, try again later
+
+    hindiVoiceChecked = true;
+    const hi = voices.filter(v => v.lang && v.lang.toLowerCase().indexOf('hi') === 0);
+    if (!hi.length) return (hindiVoice = null);
+
+    hindiVoice =
+      // Windows 11 "Swara"/"Madhur" Online (Natural)
+      hi.find(v => /Online|Natural/i.test(v.name))
+      || hi.find(v => /Google/i.test(v.name))
+      || hi.find(v => !v.localService)
+      || hi[0];
+    return hindiVoice;
+  }
+
+  // Splits a string into runs of Devanagari and everything else, so each run
+  // can be spoken by the voice that handles it properly.
+  function splitByScript(text) {
+    const segments = [];
+    let last = 0;
+    let m;
+    DEVANAGARI_RUN.lastIndex = 0;
+    while ((m = DEVANAGARI_RUN.exec(text)) !== null) {
+      if (m.index > last) segments.push({ text: text.slice(last, m.index), hindi: false });
+      segments.push({ text: m[0], hindi: true });
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) segments.push({ text: text.slice(last), hindi: false });
+    return segments.filter(s => s.text.trim());
+  }
 
   function findBestVoice() {
     const voices = window.speechSynthesis.getVoices();
@@ -52,9 +92,11 @@ const Voice = (() => {
       utterance.rate = options.rate ?? CONFIG.greeting.rate;
       utterance.pitch = options.pitch ?? CONFIG.greeting.pitch;
       utterance.volume = options.volume ?? CONFIG.greeting.volume;
-      utterance.lang = options.lang || 'en-IN';
+      utterance.lang = options.lang || (options.hindi ? 'hi-IN' : 'en-IN');
 
-      const voice = bestVoice || findBestVoice();
+      const voice = options.hindi
+        ? (hindiVoice || findHindiVoice())
+        : (bestVoice || findBestVoice());
       if (voice) utterance.voice = voice;
 
       utterance.onend = resolve;
@@ -92,16 +134,29 @@ const Voice = (() => {
 
     window.speechSynthesis.cancel();
 
-    // Split into sentences to avoid Chrome's ~15s cutoff
-    const sentences = text.match(/[^.!?]+[.!?]?\s*/g) || [text];
+    // Devanagari runs are kept whole and handed to the Hindi voice; English is
+    // still split into sentences to avoid Chrome's ~15s cutoff.
+    const chunks = [];
+    splitByScript(text).forEach(seg => {
+      if (seg.hindi) {
+        chunks.push({ text: seg.text.trim(), hindi: true });
+        return;
+      }
+      const sentences = seg.text.match(/[^.!?]+[.!?]?\s*/g) || [seg.text];
+      sentences.forEach(s => {
+        const trimmed = s.trim();
+        if (trimmed) chunks.push({ text: trimmed, hindi: false });
+      });
+    });
 
     startKeepAlive();
     try {
-      for (let i = 0; i < sentences.length; i++) {
-        const trimmed = sentences[i].trim();
-        if (!trimmed) continue;
-        await speakChunk(trimmed, options);
-        if (i < sentences.length - 1) {
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        await speakChunk(chunk.text, Object.assign({}, options, { hindi: chunk.hindi, lang: chunk.hindi ? 'hi-IN' : options.lang }));
+        // Pause only at sentence ends — a gap mid-sentence just to swap voices
+        // would sound like a stumble.
+        if (i < chunks.length - 1 && /[.!?]$/.test(chunk.text)) {
           await new Promise(r => setTimeout(r, 250));
         }
       }
@@ -116,7 +171,18 @@ const Voice = (() => {
 
   async function greet(alumni) {
     const firstName = alumni.name.split(' ')[0];
-    const text = CONFIG.greeting.template
+    const g = CONFIG.greeting;
+
+    // Devanagari is only an improvement if the device has a Hindi voice — on a
+    // machine without one it would be skipped or read as noise, so fall back to
+    // the phonetic spelling. A custom template from the admin panel is used
+    // as-is unless it actually contains Devanagari.
+    const needsHindiVoice = /[ऀ-ॿ]/.test(g.template);
+    const template = (needsHindiVoice && !findHindiVoice() && g.templateFallback)
+      ? g.templateFallback
+      : g.template;
+
+    const text = template
       .replace('{name}', firstName)
       .replace('{event}', CONFIG.event.title);
 
@@ -283,7 +349,10 @@ const Voice = (() => {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.onvoiceschanged = () => {
       bestVoice = findBestVoice();
-      if (bestVoice) console.log('TTS voice:', bestVoice.name, bestVoice.lang, bestVoice.localService ? '(local)' : '(cloud)');
+      hindiVoiceChecked = false;
+      findHindiVoice();
+      if (bestVoice) console.log('TTS voice (en):', bestVoice.name, bestVoice.lang, bestVoice.localService ? '(local)' : '(cloud)');
+      console.log('TTS voice (hi):', hindiVoice ? hindiVoice.name + ' ' + hindiVoice.lang : 'none installed - using phonetic fallback');
     };
     window.speechSynthesis.getVoices();
   }

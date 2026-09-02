@@ -9,7 +9,11 @@ const CONFIG = {
   },
 
   greeting: {
-    template: 'Hi {name}, Welcome to Yaa they n 2026.',
+    // "यादें" in Devanagari so a Hindi voice pronounces it properly; the English
+    // around it still uses the Indian English voice. See voice.js splitByScript.
+    template: 'Hi {name}, Welcome to यादें 2026.',
+    // Used only when the device has no Hindi voice installed.
+    templateFallback: 'Hi {name}, Welcome to Yaa they n 2026.',
     voice: 'default',
     rate: 0.92,
     pitch: 1.0,
