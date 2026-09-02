@@ -121,7 +121,6 @@
       if (u === 'ssbfadmin' && p === 'alumyaadein') {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('admin-container').style.display = '';
-        sessionStorage.setItem('admin_auth', '1');
         Admin?.init?.();
       } else {
         document.getElementById('login-error').textContent = 'Invalid credentials. Please try again.';
@@ -130,10 +129,6 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && document.getElementById('login-overlay').style.display !== 'none') attemptLogin();
     });
-    if (sessionStorage.getItem('admin_auth') === '1') {
-      document.getElementById('login-overlay').style.display = 'none';
-      document.getElementById('admin-container').style.display = '';
-    }
   </script>
   <script src="js/config.js?v=36"></script>
   <script src="js/utils.js?v=36"></script>
