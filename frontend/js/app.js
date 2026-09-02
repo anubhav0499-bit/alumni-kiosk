@@ -204,8 +204,10 @@ const App = (() => {
             ${photoHtml}
             <div class="profile-avatar" ${photoSrc ? 'style="display:none"' : ''}>${getInitials(alumni.name)}</div>
           </div>
-          <h1 class="profile-name">${sanitize(alumni.name)}</h1>
-          <div id="attendance-badge" class="attendance-badge badge-success">Checked In ✓</div>
+          <div class="profile-left-info">
+            <h1 class="profile-name">${sanitize(alumni.name)}</h1>
+            <div id="attendance-badge" class="attendance-badge badge-success">Checked In ✓</div>
+          </div>
         </div>
         <div class="profile-right">
           <div class="profile-details">
