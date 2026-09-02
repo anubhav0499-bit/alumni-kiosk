@@ -796,20 +796,34 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 62%;
+  height: 70%;
   z-index: 1;
   pointer-events: none;
-  backdrop-filter: blur(18px) saturate(1.3);
-  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  /* Carries the effect on its own: with no photo set there is nothing for the
+     blur to act on, so the gradient has to do the work. */
   background: linear-gradient(
     to top,
-    rgba(3, 11, 21, 0.88) 0%,
-    rgba(3, 11, 21, 0.62) 38%,
-    rgba(3, 11, 21, 0.22) 70%,
+    rgba(3, 11, 21, 0.94) 0%,
+    rgba(3, 11, 21, 0.82) 25%,
+    rgba(3, 11, 21, 0.5) 55%,
+    rgba(3, 11, 21, 0.18) 80%,
     rgba(3, 11, 21, 0) 100%
   );
-  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 42%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 0%, #000 42%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 38%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 0%, #000 38%, transparent 100%);
+}
+
+/* Hairline where the frost meets the photo, so the glass reads as a surface */
+.profile-left-info::before {
+  content: '';
+  position: absolute;
+  left: 1.25rem;
+  right: 1.25rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
 }
 
 .profile-left-info {
@@ -869,8 +883,9 @@ body {
 .profile-avatar {
   width: 100%;
   height: 100%;
-  background: linear-gradient(160deg, var(--secondary), var(--primary));
-  color: #fff;
+  /* Deepens toward the bottom so the name overlay keeps its contrast */
+  background: linear-gradient(170deg, var(--primary-light) 0%, var(--primary) 30%, var(--secondary) 65%, #06423d 100%);
+  color: rgba(255, 255, 255, 0.92);
   display: flex;
   align-items: center;
   justify-content: center;
