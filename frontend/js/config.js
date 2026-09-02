@@ -9,7 +9,7 @@ const CONFIG = {
   },
 
   greeting: {
-    template: 'Hi {name}, Welcome to Yaadein 2026.',
+    template: 'Hi {name}, Welcome to the SSBF Alumni Meet 2026.',
     voice: 'default',
     rate: 0.92,
     pitch: 1.0,
