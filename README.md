@@ -122,11 +122,48 @@ All settings are in `frontend/js/config.js`:
 - **Accessibility** — keyboard navigation, ARIA labels, high-contrast support, reduced motion
 - **Security** — input sanitization, URL validation, no exposed credentials
 
+## Environment Variables
+
+All secrets live in environment variables, never in the repo. Set these in
+**Vercel → Settings → Environment Variables**:
+
+| Variable | Purpose |
+|---|---|
+| `APPS_SCRIPT_URL` | The Apps Script `/exec` deployment URL |
+| `APPS_SCRIPT_TOKEN` | Shared secret; must match the `API_TOKEN` Script Property |
+| `ADMIN_USER` | Admin panel username |
+| `ADMIN_PASSWORD` | Admin panel password |
+| `SESSION_SECRET` | Random 32-byte key used to sign admin session cookies |
+
+And in **Apps Script → Project Settings → Script Properties**, add
+`API_TOKEN` with the same value as `APPS_SCRIPT_TOKEN`. Until that property is
+set the backend denies every request (fail-closed by design).
+
+Generate strong values with:
+
+```
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
+
+## Security Model
+
+- The browser never holds a backend credential. It calls same-origin `/api`,
+  which injects the Apps Script token server-side.
+- Apps Script rejects any request without the token, so the `/exec` URL is
+  useless on its own even though it is a public web app.
+- `getAll` and `search` never return alumni email or phone — the kiosk does not
+  need them, so they stay off the public wire.
+- `attendance` and `resetAttendance` require a signed, HttpOnly admin session
+  cookie issued by `/api/login`.
+- No inline scripts or event handlers anywhere, enforced by `script-src 'self'`.
+
 ## Admin Panel
 
 Navigate to `admin.html` (or click the gear icon on the kiosk).
 
-- **Password:** set in `config.js` (default: `ssbf2026admin`)
+- **Login:** verified server-side by `/api/login` against the `ADMIN_USER` /
+  `ADMIN_PASSWORD` environment variables (see Environment Variables below).
+  Never put credentials in frontend files — anything the browser loads is public.
 - **View** real-time attendance with batch/program charts
 - **Search/filter** attendance records
 - **Export** attendance to CSV

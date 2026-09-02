@@ -18,9 +18,9 @@ const CONFIG = {
   },
 
   api: {
-    baseUrl: location.hostname === 'localhost' || location.hostname === '127.0.0.1'
-      ? 'https://script.google.com/macros/s/AKfycbw8Z1pUDnuef1Rqgk0XgmLR4QrXzYF89Vx4hprJ5mWLnd0v3rytfIS6YSqQtGEez9C5/exec'
-      : '/api'
+    // Always same-origin. The Apps Script URL and its token stay server-side
+    // in the /api proxy; for local dev run `vercel dev`.
+    baseUrl: '/api'
   },
 
   kiosk: {

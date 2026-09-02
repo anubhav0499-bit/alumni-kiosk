@@ -1,8 +1,35 @@
 // --- Admin Panel Controller ---
 
 const Admin = (() => {
+  let wired = false;
+
+  // Called only by login.js after /api/login succeeds — never on page load,
+  // so no protected data is fetched before authentication.
   function init() {
+    if (!wired) {
+      wireControls();
+      wired = true;
+    }
     loadDashboard();
+  }
+
+  function wireControls() {
+    document.querySelector('.admin-actions').addEventListener('click', (e) => {
+      const el = e.target.closest('[data-action]');
+      if (!el) return;
+      switch (el.dataset.action) {
+        case 'refresh': loadDashboard(); break;
+        case 'export': exportAttendance(); break;
+        case 'test-voice': testGreeting(); break;
+        case 'reset': resetAttendanceData(); break;
+      }
+    });
+
+    document.getElementById('attendance-search')
+      .addEventListener('input', searchAttendance);
+
+    document.querySelector('[data-action="update-greeting"]')
+      .addEventListener('click', updateGreeting);
   }
 
   async function loadDashboard() {
@@ -133,5 +160,3 @@ const Admin = (() => {
     resetAttendanceData, testGreeting, searchAttendance, updateGreeting
   };
 })();
-
-document.addEventListener('DOMContentLoaded', Admin.init);

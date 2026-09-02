@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=37">
+  <link rel="stylesheet" href="css/styles.css?v=38">
 </head>
 <body>
 
@@ -28,7 +28,7 @@
           <input type="password" id="login-pass" placeholder="Enter password">
         </div>
       </div>
-      <button class="btn btn-primary login-btn" id="login-btn" onclick="attemptLogin()">Sign In</button>
+      <button class="btn btn-primary login-btn" id="login-btn">Sign In</button>
       <p id="login-error" class="login-error"></p>
       <a href="index.html" class="login-back">&larr; Back to Kiosk</a>
     </div>
@@ -42,10 +42,10 @@
       <div class="admin-header">
         <h1>Event Dashboard</h1>
         <div class="admin-actions">
-          <button class="admin-btn admin-btn-outline" onclick="Admin.loadDashboard()">&#8635; Refresh</button>
-          <button class="admin-btn admin-btn-primary" onclick="Admin.exportAttendance()">&#8615; Export CSV</button>
-          <button class="admin-btn admin-btn-outline" onclick="Admin.testGreeting()">&#128266; Test Voice</button>
-          <button class="admin-btn admin-btn-danger" onclick="Admin.resetAttendanceData()">&#9888; Reset</button>
+          <button class="admin-btn admin-btn-outline" data-action="refresh">&#8635; Refresh</button>
+          <button class="admin-btn admin-btn-primary" data-action="export">&#8615; Export CSV</button>
+          <button class="admin-btn admin-btn-outline" data-action="test-voice">&#128266; Test Voice</button>
+          <button class="admin-btn admin-btn-danger" data-action="reset">&#9888; Reset</button>
           <a class="admin-btn admin-btn-outline" href="index.html">Kiosk</a>
         </div>
       </div>
@@ -76,7 +76,7 @@
       <div class="table-section">
         <div class="table-header">
           <h3>Attendance Records <span id="table-count" style="color:var(--text-secondary);font-weight:400"></span></h3>
-          <input type="text" id="attendance-search" class="table-search" placeholder="Filter by name, batch..." oninput="Admin.searchAttendance()" aria-label="Filter attendance">
+          <input type="text" id="attendance-search" class="table-search" placeholder="Filter by name, batch..." aria-label="Filter attendance">
         </div>
         <table class="data-table">
           <thead>
@@ -101,42 +101,18 @@
             <label>Welcome Message Template</label>
             <textarea id="greeting-template">Welcome, {title} {name}. We are delighted to welcome you to the {event}. We hope you have a wonderful time reconnecting with your batchmates and faculty.</textarea>
           </div>
-          <button class="admin-btn admin-btn-primary" onclick="Admin.updateGreeting()" style="align-self:flex-end">Update</button>
+          <button class="admin-btn admin-btn-primary" data-action="update-greeting" style="align-self:flex-end">Update</button>
         </div>
       </div>
 
     </div>
   </div>
 
-  <script>
-    function attemptLogin() {
-      var u = document.getElementById('login-user').value.trim();
-      var p = document.getElementById('login-pass').value;
-      if (u === 'ssbfadmin' && p === 'alumyaadein') {
-        var overlay = document.getElementById('login-overlay');
-        overlay.classList.add('login-exit');
-        document.getElementById('admin-container').style.display = '';
-        overlay.addEventListener('transitionend', function handler() {
-          overlay.style.display = 'none';
-          overlay.removeEventListener('transitionend', handler);
-        });
-        Admin?.init?.();
-      } else {
-        var errEl = document.getElementById('login-error');
-        errEl.textContent = 'Invalid credentials. Please try again.';
-        errEl.style.animation = 'none';
-        errEl.offsetHeight;
-        errEl.style.animation = 'loginShake 0.4s ease';
-      }
-    }
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !document.getElementById('login-overlay').classList.contains('login-exit')) attemptLogin();
-    });
-  </script>
-  <script src="js/config.js?v=37"></script>
-  <script src="js/utils.js?v=37"></script>
-  <script src="js/voice.js?v=37"></script>
-  <script src="js/search.js?v=37"></script>
-  <script src="js/admin.js?v=37"></script>
+  <script src="js/config.js?v=38"></script>
+  <script src="js/utils.js?v=38"></script>
+  <script src="js/voice.js?v=38"></script>
+  <script src="js/search.js?v=38"></script>
+  <script src="js/admin.js?v=38"></script>
+  <script src="js/login.js?v=38"></script>
 </body>
 </html>

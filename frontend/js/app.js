@@ -95,7 +95,7 @@ const App = (() => {
       </div>
       <div class="results-list">
         ${results.map((a, i) => `
-          <button class="result-item" onclick="App.selectResult(${i})">
+          <button class="result-item" data-action="select" data-index="${i}">
             <div class="result-info">
               <span class="result-name">${sanitize(a.name)}</span>
               <span class="result-detail">${sanitize(a.program)} | Batch ${sanitize(a.batch)}</span>
@@ -105,7 +105,7 @@ const App = (() => {
         `).join('')}
       </div>
       <div class="register-prompt">
-        <p>Not in the list? <a href="#" onclick="event.preventDefault();App.showRegistrationForm()">Register here</a></p>
+        <p>Not in the list? <a href="#" data-action="register">Register here</a></p>
       </div>
     `;
     container.classList.add('visible');
@@ -120,8 +120,8 @@ const App = (() => {
         <h3>No Match Found</h3>
         <p>Sorry, we couldn't find your details.</p>
         <div class="no-results-actions">
-          <button class="btn btn-primary" onclick="App.showRegistrationForm('${sanitize(prefill).replace(/'/g, "\\'")}')">Register & Check In</button>
-          <button class="btn btn-secondary" onclick="App.goHome()">Try Again</button>
+          <button class="btn btn-primary" data-action="register" data-prefill="${sanitize(prefill)}">Register & Check In</button>
+          <button class="btn btn-secondary" data-action="home">Try Again</button>
         </div>
       </div>
     `;
@@ -194,7 +194,7 @@ const App = (() => {
     const container = document.getElementById('profile-content');
     const photoSrc = normalizePhotoUrl(alumni.photoUrl);
     const photoHtml = photoSrc
-      ? `<img src="${sanitizeUrl(photoSrc)}" alt="${sanitize(alumni.name)}" class="profile-photo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      ? `<img src="${sanitize(sanitizeUrl(photoSrc))}" alt="${sanitize(alumni.name)}" class="profile-photo">`
       : '';
 
     container.innerHTML = `
@@ -228,14 +228,25 @@ const App = (() => {
               </div>
             </div>
             <div class="contact-actions">
-              <button class="btn btn-primary contact-submit-btn" id="contact-submit-btn" onclick="App.submitContactUpdate('${sanitize(alumni.alumniId).replace(/'/g, "\\'")}')">Save & Continue</button>
-              <button class="btn btn-secondary" onclick="App.goHome()">Skip</button>
+              <button class="btn btn-primary contact-submit-btn" id="contact-submit-btn" data-action="save-contact" data-alumni-id="${sanitize(alumni.alumniId)}">Save & Continue</button>
+              <button class="btn btn-secondary" data-action="home">Skip</button>
             </div>
             <div id="contact-status" class="contact-status"></div>
           </div>
         </div>
       </div>
     `;
+
+    // Bound here rather than as an inline onerror attribute, so the page needs
+    // no inline script (see the CSP in vercel.json).
+    const img = container.querySelector('.profile-photo');
+    if (img) {
+      img.addEventListener('error', () => {
+        img.style.display = 'none';
+        const avatar = img.nextElementSibling;
+        if (avatar) avatar.style.display = 'flex';
+      });
+    }
   }
 
   function profileField(label, value, highlight = false) {
@@ -331,8 +342,8 @@ const App = (() => {
           </div>
         </div>
         <div class="contact-actions">
-          <button class="btn btn-primary contact-submit-btn" id="reg-submit-btn" onclick="App.submitRegistration()">Register & Check In</button>
-          <button class="btn btn-secondary" onclick="App.goHome()">Cancel</button>
+          <button class="btn btn-primary contact-submit-btn" id="reg-submit-btn" data-action="submit-registration">Register & Check In</button>
+          <button class="btn btn-secondary" data-action="home">Cancel</button>
         </div>
         <div id="reg-status" class="contact-status"></div>
       </div>
@@ -442,8 +453,8 @@ const App = (() => {
         <p>Did you mean:</p>
         <h3>"${sanitize(transcript)}"</h3>
         <div class="confirm-actions">
-          <button class="btn btn-primary" onclick="App.handleSearch('${sanitize(transcript).replace(/'/g, "\\'")}')">Yes, Search</button>
-          <button class="btn btn-secondary" onclick="App.startVoiceSearch()">Try Again</button>
+          <button class="btn btn-primary" data-action="search-transcript" data-transcript="${sanitize(transcript)}">Yes, Search</button>
+          <button class="btn btn-secondary" data-action="voice-search">Try Again</button>
         </div>
       </div>
     `;
@@ -534,6 +545,42 @@ const App = (() => {
     voiceBtn.addEventListener('click', startVoiceSearch);
     homeBtn?.addEventListener('click', goHome);
     fullscreenBtn?.addEventListener('click', toggleFullscreen);
+
+    // Delegated handlers for dynamically rendered markup. Values travel as
+    // data-* attributes instead of being interpolated into inline handlers,
+    // so alumni-supplied text is never parsed as JavaScript.
+    document.getElementById('search-results').addEventListener('click', (e) => {
+      const el = e.target.closest('[data-action]');
+      if (!el) return;
+      switch (el.dataset.action) {
+        case 'select':
+          selectResult(parseInt(el.dataset.index, 10));
+          break;
+        case 'register':
+          e.preventDefault();
+          showRegistrationForm(el.dataset.prefill || '');
+          break;
+        case 'submit-registration':
+          submitRegistration();
+          break;
+        case 'search-transcript':
+          handleSearch(el.dataset.transcript || '');
+          break;
+        case 'voice-search':
+          startVoiceSearch();
+          break;
+        case 'home':
+          goHome();
+          break;
+      }
+    });
+
+    document.getElementById('profile-content').addEventListener('click', (e) => {
+      const el = e.target.closest('[data-action]');
+      if (!el) return;
+      if (el.dataset.action === 'save-contact') submitContactUpdate(el.dataset.alumniId);
+      else if (el.dataset.action === 'home') goHome();
+    });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') goHome();

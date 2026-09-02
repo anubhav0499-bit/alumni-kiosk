@@ -5,10 +5,12 @@ const Search = (() => {
   const LS_KEY = 'alumni_data';
   const LS_TS_KEY = 'alumni_ts';
 
+  // sessionStorage, not localStorage: on a shared kiosk the roster should not
+  // outlive the browser session.
   function loadFromStorage() {
     try {
-      const raw = localStorage.getItem(LS_KEY);
-      const ts = parseInt(localStorage.getItem(LS_TS_KEY) || '0', 10);
+      const raw = sessionStorage.getItem(LS_KEY);
+      const ts = parseInt(sessionStorage.getItem(LS_TS_KEY) || '0', 10);
       if (raw && ts) {
         cachedAlumni = JSON.parse(raw);
         cacheTimestamp = ts;
@@ -18,8 +20,8 @@ const Search = (() => {
 
   function saveToStorage() {
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify(cachedAlumni));
-      localStorage.setItem(LS_TS_KEY, String(cacheTimestamp));
+      sessionStorage.setItem(LS_KEY, JSON.stringify(cachedAlumni));
+      sessionStorage.setItem(LS_TS_KEY, String(cacheTimestamp));
     } catch {}
   }
 
@@ -126,7 +128,7 @@ const Search = (() => {
   function clearCache() {
     cachedAlumni = [];
     cacheTimestamp = 0;
-    try { localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_TS_KEY); } catch {}
+    try { sessionStorage.removeItem(LS_KEY); sessionStorage.removeItem(LS_TS_KEY); } catch {}
   }
 
   function getCachedCount() {

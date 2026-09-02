@@ -17,9 +17,47 @@ function getAttendanceSheet() {
   return getSpreadsheet().getSheetByName(ATTENDANCE_SHEET_NAME);
 }
 
+// --- Auth ---
+// The shared secret lives in Script Properties (File > Project Settings >
+// Script Properties), never in this file. If it is unset every request is
+// denied, so a misconfigured deployment fails closed rather than open.
+
+function isAuthorized_(token) {
+  const expected = PropertiesService.getScriptProperties().getProperty('API_TOKEN');
+  if (!expected) return false;
+  const given = String(token || '');
+  if (given.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < given.length; i++) {
+    diff |= given.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+function unauthorized_() {
+  return jsonResponse({ success: false, error: 'Unauthorized' });
+}
+
+// Contact details are never returned to the kiosk — it only needs enough to
+// search and display a profile. Keeps 62 people's emails and phones off the
+// public wire.
+function toPublicAlumni_(alumni) {
+  return {
+    alumniId: alumni.alumniId,
+    name: alumni.name,
+    photoUrl: alumni.photoUrl,
+    program: alumni.program,
+    batch: alumni.batch,
+    company: alumni.company,
+    designation: alumni.designation
+  };
+}
+
 // --- Web App Entry Points ---
 
 function doGet(e) {
+  if (!isAuthorized_(e.parameter.token)) return unauthorized_();
+
   const action = e.parameter.action;
 
   switch (action) {
@@ -47,7 +85,15 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  const data = JSON.parse(e.postData.contents);
+  let data;
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return jsonResponse({ success: false, error: 'Bad request' });
+  }
+
+  if (!isAuthorized_(data.token)) return unauthorized_();
+
   const action = data.action;
 
   switch (action) {
@@ -81,7 +127,7 @@ function getAllAlumni() {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (!row[0] && !row[1]) continue;
-    alumni.push(rowToAlumni(normalized, row));
+    alumni.push(toPublicAlumni_(rowToAlumni(normalized, row)));
   }
 
   return { success: true, data: alumni, count: alumni.length };
@@ -105,7 +151,7 @@ function searchAlumni(query) {
 
     const score = fuzzyMatch(normalizedQuery, name);
     if (score > 0.4) {
-      const alumni = rowToAlumni(normalized, row);
+      const alumni = toPublicAlumni_(rowToAlumni(normalized, row));
       alumni._score = score;
       results.push(alumni);
     }
@@ -343,12 +389,10 @@ function addAlumni(data) {
 
     return {
       success: true,
-      data: {
+      data: toPublicAlumni_({
         alumniId: alumniId, name: name, photoUrl: '', program: program,
-        batch: batch, company: company,
-        designation: designation, email: email,
-        phone: phone
-      }
+        batch: batch, company: company, designation: designation
+      })
     };
   } finally {
     lock.releaseLock();
