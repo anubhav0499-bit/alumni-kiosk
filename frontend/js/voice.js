@@ -134,20 +134,26 @@ const Voice = (() => {
 
     window.speechSynthesis.cancel();
 
-    // Devanagari runs are kept whole and handed to the Hindi voice; English is
-    // still split into sentences to avoid Chrome's ~15s cutoff.
+    // options.hindi puts the whole utterance on the Hindi voice. Without it,
+    // each script run goes to the voice that handles it. Either way the text is
+    // split into sentences to avoid Chrome's ~15s cutoff.
     const chunks = [];
-    splitByScript(text).forEach(seg => {
-      if (seg.hindi) {
-        chunks.push({ text: seg.text.trim(), hindi: true });
-        return;
-      }
-      const sentences = seg.text.match(/[^.!?]+[.!?]?\s*/g) || [seg.text];
+    const pushSentences = (str, hindi) => {
+      const sentences = str.match(/[^.!?]+[.!?]?\s*/g) || [str];
       sentences.forEach(s => {
         const trimmed = s.trim();
-        if (trimmed) chunks.push({ text: trimmed, hindi: false });
+        if (trimmed) chunks.push({ text: trimmed, hindi: hindi });
       });
-    });
+    };
+
+    if (options.hindi) {
+      pushSentences(text, true);
+    } else {
+      splitByScript(text).forEach(seg => {
+        if (seg.hindi) chunks.push({ text: seg.text.trim(), hindi: true });
+        else pushSentences(seg.text, false);
+      });
+    }
 
     startKeepAlive();
     try {
@@ -173,12 +179,14 @@ const Voice = (() => {
     const firstName = alumni.name.split(' ')[0];
     const g = CONFIG.greeting;
 
-    // Devanagari is only an improvement if the device has a Hindi voice — on a
-    // machine without one it would be skipped or read as noise, so fall back to
-    // the phonetic spelling. A custom template from the admin panel is used
-    // as-is unless it actually contains Devanagari.
+    // The greeting is spoken entirely by the Hindi voice, which handles both
+    // "यादें" and Indian names better than an English voice. Without a Hindi
+    // voice installed the Devanagari would be skipped or read as noise, so fall
+    // back to the phonetic spelling on the English voice. A custom template
+    // from the admin panel is used as-is unless it contains Devanagari.
     const needsHindiVoice = /[ऀ-ॿ]/.test(g.template);
-    const template = (needsHindiVoice && !findHindiVoice() && g.templateFallback)
+    const useHindi = needsHindiVoice && !!findHindiVoice();
+    const template = (needsHindiVoice && !useHindi && g.templateFallback)
       ? g.templateFallback
       : g.template;
 
@@ -192,7 +200,7 @@ const Voice = (() => {
       if (CONFIG.greeting.chimeEnabled) await playChime();
     } catch {}
     try {
-      await speak(text);
+      await speak(text, { hindi: useHindi });
     } catch {}
   }
 

@@ -9,11 +9,12 @@ const CONFIG = {
   },
 
   greeting: {
-    // "यादें" in Devanagari so a Hindi voice pronounces it properly; the English
-    // around it still uses the Indian English voice. See voice.js splitByScript.
-    template: 'Hi {name}, Welcome to यादें 2026.',
+    // Spoken entirely by the Hindi voice, which pronounces both "यादें" and
+    // Indian names correctly. The year is spelled out because a Hindi voice
+    // reads "2026" as "दो हज़ार छब्बीस".
+    template: 'Hi {name}, Welcome to यादें twenty twenty six.',
     // Used only when the device has no Hindi voice installed.
-    templateFallback: 'Hi {name}, Welcome to Yaa they n 2026.',
+    templateFallback: 'Hi {name}, Welcome to Yaa they n twenty twenty six.',
     voice: 'default',
     rate: 0.92,
     pitch: 1.0,
