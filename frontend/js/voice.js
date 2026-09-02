@@ -179,14 +179,14 @@ const Voice = (() => {
     const firstName = alumni.name.split(' ')[0];
     const g = CONFIG.greeting;
 
-    // The greeting is spoken entirely by the Hindi voice, which handles both
-    // "यादें" and Indian names better than an English voice. Without a Hindi
-    // voice installed the Devanagari would be skipped or read as noise, so fall
-    // back to the phonetic spelling on the English voice. A custom template
-    // from the admin panel is used as-is unless it contains Devanagari.
+    // Only the Devanagari goes to the Hindi voice. Sending the whole sentence
+    // there mangles Latin-script names, since a Hindi voice approximates them
+    // through Hindi phonology — the name stays on the Indian English voice.
+    // Without any Hindi voice installed the Devanagari would be skipped or read
+    // as noise, so fall back to the phonetic spelling. A custom template from
+    // the admin panel is used as-is unless it contains Devanagari.
     const needsHindiVoice = /[ऀ-ॿ]/.test(g.template);
-    const useHindi = needsHindiVoice && !!findHindiVoice();
-    const template = (needsHindiVoice && !useHindi && g.templateFallback)
+    const template = (needsHindiVoice && !findHindiVoice() && g.templateFallback)
       ? g.templateFallback
       : g.template;
 
@@ -200,7 +200,7 @@ const Voice = (() => {
       if (CONFIG.greeting.chimeEnabled) await playChime();
     } catch {}
     try {
-      await speak(text, { hindi: useHindi });
+      await speak(text);
     } catch {}
   }
 
