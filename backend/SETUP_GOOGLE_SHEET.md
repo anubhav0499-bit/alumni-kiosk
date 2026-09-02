@@ -69,17 +69,41 @@ Add these column headers in Row 1:
    https://script.google.com/macros/s/AKfycb.../exec
    ```
 
-## Step 6: Connect to the Kiosk
+## Step 6: Set the shared secret
 
-Open `frontend/js/config.js` and replace the placeholder:
+The web app is reachable by anyone who knows its URL, so it requires a token on
+every request. Without this step the backend denies everything (it fails closed).
 
-```js
-api: {
-  baseUrl: 'https://script.google.com/macros/s/AKfycbz1ga5yQvFvzFcHO5bfRLJUeuT7nSquP21XziCoyXuq0_uyeGphJkSjuarbB9F-IcRQ/exec'
-}
-```
+1. Generate a token:
+   ```
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+   ```
+2. In the Apps Script editor go to **Project Settings → Script Properties →
+   Add script property**:
+   - **Property:** `API_TOKEN`
+   - **Value:** the generated token
+3. Click **Save script properties**, then redeploy (**Deploy → Manage
+   deployments → Edit → New version → Deploy**).
 
-## Step 7: Using Photo URLs
+## Step 7: Connect to the Kiosk
+
+Do **not** put the web app URL or the token in `frontend/js/config.js` — every
+file the browser loads is public, and anything in it is readable by anyone.
+`config.js` always points at the same-origin `/api` proxy, which holds the
+secrets server-side.
+
+Set these in **Vercel → Settings → Environment Variables** instead:
+
+| Variable | Value |
+|---|---|
+| `APPS_SCRIPT_URL` | the `/exec` URL from Step 5 |
+| `APPS_SCRIPT_TOKEN` | the same token as `API_TOKEN` in Step 6 |
+
+Then redeploy the Vercel project so the new values are picked up. See the
+Environment Variables section of the main `README.md` for the admin login and
+session variables.
+
+## Step 8: Using Photo URLs
 
 To add alumni photos:
 
