@@ -74,7 +74,7 @@ function jsonResponse(data) {
 
 function getAllAlumni() {
   const sheet = getAlumniSheet();
-  const data = sheet.getDataRange().getValues();
+  const data = sheet.getDataRange().getDisplayValues();
   const normalized = normalizeHeaders(data[0]);
   const alumni = [];
 
@@ -93,7 +93,7 @@ function searchAlumni(query) {
   }
 
   const sheet = getAlumniSheet();
-  const data = sheet.getDataRange().getValues();
+  const data = sheet.getDataRange().getDisplayValues();
   const normalized = normalizeHeaders(data[0]);
   const normalizedQuery = normalizeString(query);
   const results = [];
@@ -277,7 +277,7 @@ function updateContact(data) {
 
   try {
     const sheet = getAlumniSheet();
-    const allData = sheet.getDataRange().getValues();
+    const allData = sheet.getDataRange().getDisplayValues();
     const headers = normalizeHeaders(allData[0]);
 
     let phoneCol = headers.indexOf('phone');
