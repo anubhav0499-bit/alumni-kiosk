@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=36">
+  <link rel="stylesheet" href="css/styles.css?v=37">
 </head>
 <body>
 
@@ -119,21 +119,30 @@
       var u = document.getElementById('login-user').value.trim();
       var p = document.getElementById('login-pass').value;
       if (u === 'ssbfadmin' && p === 'alumyaadein') {
-        document.getElementById('login-overlay').style.display = 'none';
+        var overlay = document.getElementById('login-overlay');
+        overlay.classList.add('login-exit');
         document.getElementById('admin-container').style.display = '';
+        overlay.addEventListener('transitionend', function handler() {
+          overlay.style.display = 'none';
+          overlay.removeEventListener('transitionend', handler);
+        });
         Admin?.init?.();
       } else {
-        document.getElementById('login-error').textContent = 'Invalid credentials. Please try again.';
+        var errEl = document.getElementById('login-error');
+        errEl.textContent = 'Invalid credentials. Please try again.';
+        errEl.style.animation = 'none';
+        errEl.offsetHeight;
+        errEl.style.animation = 'loginShake 0.4s ease';
       }
     }
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && document.getElementById('login-overlay').style.display !== 'none') attemptLogin();
+      if (e.key === 'Enter' && !document.getElementById('login-overlay').classList.contains('login-exit')) attemptLogin();
     });
   </script>
-  <script src="js/config.js?v=36"></script>
-  <script src="js/utils.js?v=36"></script>
-  <script src="js/voice.js?v=36"></script>
-  <script src="js/search.js?v=36"></script>
-  <script src="js/admin.js?v=36"></script>
+  <script src="js/config.js?v=37"></script>
+  <script src="js/utils.js?v=37"></script>
+  <script src="js/voice.js?v=37"></script>
+  <script src="js/search.js?v=37"></script>
+  <script src="js/admin.js?v=37"></script>
 </body>
 </html>

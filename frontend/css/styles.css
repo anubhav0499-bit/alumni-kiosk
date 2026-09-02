@@ -1810,6 +1810,13 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--bg);
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.login-overlay.login-exit {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .login-card {
@@ -1823,6 +1830,29 @@ body {
   border-radius: var(--radius-card);
   box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
   text-align: center;
+  animation: loginCardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.login-exit .login-card {
+  animation: loginCardOut 0.45s cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+
+@keyframes loginCardIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes loginCardOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-20px) scale(0.97); }
+}
+
+@keyframes loginShake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-8px); }
+  40%      { transform: translateX(8px); }
+  60%      { transform: translateX(-5px); }
+  80%      { transform: translateX(5px); }
 }
 
 .login-icon {
