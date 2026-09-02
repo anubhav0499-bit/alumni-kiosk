@@ -418,17 +418,19 @@ function checkAttendance(alumniId) {
 
 function getAttendance() {
   const sheet = getAttendanceSheet();
-  const range = sheet.getDataRange();
-  // Timestamps are read as native values so they serialise to ISO and sort
-  // correctly; the text columns are read as displayed so a batch like
-  // "2010-12" does not come back as a parsed Date.
-  const values = range.getValues();
-  const display = range.getDisplayValues();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return { success: true, data: [], count: 0 };
+
+  // Text columns are read as displayed so a batch like "2010-12" does not come
+  // back as a parsed Date. Only the timestamp column is read as a native value,
+  // so it serialises to ISO and sorts correctly.
+  const display = sheet.getRange(2, 1, lastRow - 1, 7).getDisplayValues();
+  const timestamps = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
   const records = [];
 
-  for (let i = 1; i < values.length; i++) {
+  for (let i = 0; i < display.length; i++) {
     records.push({
-      timestamp: values[i][0],
+      timestamp: timestamps[i][0],
       alumniId: String(display[i][1]),
       name: String(display[i][2]),
       batch: String(display[i][3]),
@@ -448,16 +450,20 @@ function getStats() {
   const totalAlumni = alumniSheet.getLastRow() - 1;
   const totalAttendance = attendanceSheet.getLastRow() - 1;
 
-  // Displayed text, so batch labels read "2010-12" rather than a parsed Date.
-  const attendanceData = attendanceSheet.getDataRange().getDisplayValues();
   const batchWise = {};
   const programWise = {};
 
-  for (let i = 1; i < attendanceData.length; i++) {
-    const batch = String(attendanceData[i][3]);
-    const program = String(attendanceData[i][4]);
-    batchWise[batch] = (batchWise[batch] || 0) + 1;
-    programWise[program] = (programWise[program] || 0) + 1;
+  // Only the Batch and Program columns, and only the data rows. Rendering
+  // display text is far more expensive than reading raw values, so this reads
+  // the two columns it needs rather than the whole sheet.
+  if (totalAttendance > 0) {
+    const rows = attendanceSheet.getRange(2, 4, totalAttendance, 2).getDisplayValues();
+    for (let i = 0; i < rows.length; i++) {
+      const batch = String(rows[i][0]);
+      const program = String(rows[i][1]);
+      batchWise[batch] = (batchWise[batch] || 0) + 1;
+      programWise[program] = (programWise[program] || 0) + 1;
+    }
   }
 
   return {

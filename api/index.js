@@ -1,6 +1,8 @@
 const { COOKIE_NAME, verifySession, parseCookies } = require('../lib/session');
 
-const FETCH_TIMEOUT = 15000;
+// Apps Script sheet reads routinely take 4-10s. Kept under the 30s function
+// maxDuration so the proxy returns a clean error rather than being killed.
+const FETCH_TIMEOUT = 25000;
 
 // Actions the public kiosk may call. Anything not listed here is rejected
 // before it reaches the backend.
