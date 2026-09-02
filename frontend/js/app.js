@@ -205,7 +205,7 @@ const App = (() => {
             <div class="profile-avatar" ${photoSrc ? 'style="display:none"' : ''}>${getInitials(alumni.name)}</div>
           </div>
           <h1 class="profile-name">${sanitize(alumni.name)}</h1>
-          <p class="profile-designation">${sanitize(alumni.designation || '')}${alumni.designation && alumni.company ? ' at ' : ''}${sanitize(alumni.company || '')}</p>
+          <p class="profile-designation">${sanitize(alumni.designation || '')}</p>
           <div id="attendance-badge" class="attendance-badge badge-success">Checked In ✓</div>
         </div>
         <div class="profile-right">
@@ -213,7 +213,7 @@ const App = (() => {
             ${profileField('Program', alumni.program)}
             ${profileField('Batch', alumni.batch)}
             ${profileField('Graduation', alumni.graduationYear)}
-            ${profileField('City', alumni.city)}
+            ${profileField('Company', alumni.company)}
           </div>
           <div class="contact-update-section" id="contact-update">
             <h3 class="contact-update-title">Update Your Contact Details</h3>
