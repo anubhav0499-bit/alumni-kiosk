@@ -3,7 +3,7 @@ const CONFIG = {
     title: 'Yaadein 2026',
     subtitle: 'Reconnect. Reimagine. Rejoice.',
     institution: 'Symbiosis School of Banking and Finance',
-    date: 'September 2026',
+    date: 'SSBF',
     venue: 'SIU Lavale Campus, Pune',
     bannerUrl: ''
   },
