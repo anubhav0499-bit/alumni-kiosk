@@ -213,6 +213,7 @@ const App = (() => {
             ${profileField('Program', alumni.program)}
             ${profileField('Batch', alumni.batch)}
             ${profileField('Company', alumni.company)}
+            ${profileField('Designation', alumni.designation)}
           </div>
           <div class="contact-update-section" id="contact-update">
             <h3 class="contact-update-title">Update Your Contact Details</h3>
