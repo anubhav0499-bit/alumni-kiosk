@@ -212,7 +212,6 @@ const App = (() => {
           <div class="profile-details">
             ${profileField('Program', alumni.program)}
             ${profileField('Batch', alumni.batch)}
-            ${profileField('Graduation', alumni.graduationYear)}
             ${profileField('Company', alumni.company)}
           </div>
           <div class="contact-update-section" id="contact-update">
@@ -330,10 +329,6 @@ const App = (() => {
             <label for="reg-designation">Designation</label>
             <input type="text" id="reg-designation" placeholder="Current role" autocomplete="off">
           </div>
-          <div class="contact-field">
-            <label for="reg-city">City</label>
-            <input type="text" id="reg-city" placeholder="Current city" autocomplete="off">
-          </div>
         </div>
         <div class="contact-actions">
           <button class="btn btn-primary contact-submit-btn" id="reg-submit-btn" onclick="App.submitRegistration()">Register & Check In</button>
@@ -354,7 +349,6 @@ const App = (() => {
     const batch = document.getElementById('reg-batch').value.trim();
     const company = document.getElementById('reg-company').value.trim();
     const designation = document.getElementById('reg-designation').value.trim();
-    const city = document.getElementById('reg-city').value.trim();
 
     const btn = document.getElementById('reg-submit-btn');
     const status = document.getElementById('reg-status');
@@ -375,7 +369,7 @@ const App = (() => {
     status.textContent = '';
 
     try {
-      const result = await Search.addAlumni({ name, phone, email, program, batch, company, designation, city });
+      const result = await Search.addAlumni({ name, phone, email, program, batch, company, designation });
       if (!result.success) throw new Error(result.error || 'Registration failed');
 
       Search.clearCache();

@@ -118,7 +118,7 @@ const Search = (() => {
     return fetchFromApi('addAlumni', {
       name: data.name || '', program: data.program || '', batch: data.batch || '',
       company: data.company || '', designation: data.designation || '',
-      city: data.city || '', email: data.email || '', phone: data.phone || '',
+      email: data.email || '', phone: data.phone || '',
       deviceId: CONFIG.kiosk.deviceId
     });
   }

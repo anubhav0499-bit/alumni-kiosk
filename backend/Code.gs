@@ -138,11 +138,9 @@ function rowToAlumni(normalized, row) {
     photoUrl: normalizeDriveUrl(String(row[photoIdx] || '').trim()),
     program: String(row[col('program', 3)] || '').trim(),
     batch: String(row[col('batch', 4)] || '').trim(),
-    graduationYear: String(row[col('graduationyear', 5)] || '').trim(),
-    company: String(row[col('company', 6)] || '').trim(),
-    designation: String(row[col('designation', 7)] || '').trim(),
-    city: String(row[col('city', 8)] || '').trim(),
-    email: String(row[col('email', 9)] || '').trim(),
+    company: String(row[col('company', 5)] || '').trim(),
+    designation: String(row[col('designation', 6)] || '').trim(),
+    email: String(row[col('email', 7)] || '').trim(),
     phone: phoneIdx !== -1 ? String(row[phoneIdx] || '').trim() : ''
   };
 }
@@ -335,16 +333,10 @@ function addAlumni(data) {
     var batch = String(data.batch || '').trim();
     var company = String(data.company || '').trim();
     var designation = String(data.designation || '').trim();
-    var city = String(data.city || '').trim();
     var email = String(data.email || '').trim();
     var phone = String(data.phone || '').trim();
 
-    var headers = normalizeHeaders(sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]);
-    if (headers.indexOf('phone') === -1) {
-      sheet.getRange(1, headers.length + 1).setValue('Phone');
-    }
-
-    sheet.appendRow([alumniId, name, '', program, batch, '', company, designation, city, email, '', '', phone]);
+    sheet.appendRow([alumniId, name, '', program, batch, company, designation, email, phone]);
 
     var attSheet = getAttendanceSheet();
     attSheet.appendRow([new Date(), alumniId, name, batch, program, 'Present', String(data.deviceId || '')]);
@@ -353,8 +345,8 @@ function addAlumni(data) {
       success: true,
       data: {
         alumniId: alumniId, name: name, photoUrl: '', program: program,
-        batch: batch, graduationYear: '', company: company,
-        designation: designation, city: city, email: email,
+        batch: batch, company: company,
+        designation: designation, email: email,
         phone: phone
       }
     };
