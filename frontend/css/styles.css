@@ -1691,17 +1691,23 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(3, 11, 21, 0.8);
-  backdrop-filter: blur(50px) saturate(2);
-  -webkit-backdrop-filter: blur(50px) saturate(2);
+  /* Fully opaque so the profile card behind is not glimpsed. That also makes a
+     backdrop-filter pointless here — dropping it removes a full-screen blur
+     that was compositing every frame while the card animated in. */
+  background:
+    radial-gradient(ellipse at 50% 38%, rgba(45, 212, 191, 0.12), transparent 62%),
+    var(--bg);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 1s var(--ease-fluid);
+  /* Slow fade on the way out, revealing the card gently. */
+  transition: opacity 0.9s var(--ease-fluid);
 }
 
 #welcome-overlay.visible {
   opacity: 1;
   pointer-events: auto;
+  /* Quick on the way in, so the card is covered before it can be seen. */
+  transition: opacity 0.22s ease-out;
 }
 
 .welcome-content {
