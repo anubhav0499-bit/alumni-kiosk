@@ -100,6 +100,12 @@ const Search = (() => {
     return fetchFromApi('checkAttendance', { alumniId });
   }
 
+  // Fetched per-person when a card opens, so the cached roster stays free of
+  // contact details.
+  function getContact(alumniId) {
+    return fetchFromApi('getContact', { alumniId });
+  }
+
   function getAttendance(fresh) {
     return fetchFromApi('attendance', fresh ? { _t: Date.now() } : {});
   }
@@ -136,7 +142,7 @@ const Search = (() => {
   }
 
   return {
-    loadAllAlumni, searchAlumni, markAttendance, checkAttendance,
+    loadAllAlumni, searchAlumni, markAttendance, checkAttendance, getContact,
     getAttendance, getStats, resetAttendance, updateContact, addAlumni, clearCache, getCachedCount
   };
 })();

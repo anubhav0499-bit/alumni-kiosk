@@ -69,6 +69,8 @@ function doGet(e) {
       return jsonResponse(getAttendance());
     case 'checkAttendance':
       return jsonResponse(checkAttendance(e.parameter.alumniId));
+    case 'getContact':
+      return jsonResponse(getContact(e.parameter.alumniId));
     case 'stats':
       return jsonResponse(getStats());
     case 'markAttendance':
@@ -189,6 +191,41 @@ function rowToAlumni(normalized, row) {
     email: String(row[col('email', 7)] || '').trim(),
     phone: phoneIdx !== -1 ? String(row[phoneIdx] || '').trim() : ''
   };
+}
+
+// Contact details for a single alumnus, looked up when their card opens.
+// Deliberately not part of getAll/search: the roster is fetched by every
+// visitor, and one request should never return everyone's email and phone.
+function getContact(alumniId) {
+  var id = String(alumniId || '').trim();
+  if (!id) return { success: false, error: 'Missing alumni ID' };
+
+  var sheet = getAlumniSheet();
+  var data = sheet.getDataRange().getDisplayValues();
+  var headers = normalizeHeaders(data[0]);
+
+  function col(name, fallback) {
+    var idx = headers.indexOf(name);
+    return idx !== -1 ? idx : fallback;
+  }
+
+  var idCol = col('alumniid', 0);
+  var emailIdx = col('email', 7);
+  var phoneIdx = col('phone', -1);
+
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][idCol]).trim() === id) {
+      return {
+        success: true,
+        data: {
+          email: emailIdx !== -1 ? String(data[i][emailIdx] || '').trim() : '',
+          phone: phoneIdx !== -1 ? String(data[i][phoneIdx] || '').trim() : ''
+        }
+      };
+    }
+  }
+
+  return { success: false, error: 'Alumni not found' };
 }
 
 function normalizeDriveUrl(url) {

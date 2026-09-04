@@ -201,6 +201,7 @@ const App = (() => {
     if (counter) counter.textContent = `${next} checked in`;
 
     Voice.greet(alumni).catch(() => {});
+    prefillContact(alumni.alumniId);
 
     Search.markAttendance(alumni).then(result => {
       if (result?.success && result.alreadyCheckedIn) {
@@ -287,6 +288,20 @@ const App = (() => {
   }
 
   // --- Contact Update ---
+
+  // Fetches this one alumnus's details so they can confirm or correct what is
+  // on file, rather than retyping it. Never overwrites something already typed,
+  // since the request can land after the guest has started editing.
+  function prefillContact(alumniId) {
+    if (!alumniId) return;
+    Search.getContact(alumniId).then(result => {
+      if (!result || !result.success || !result.data) return;
+      const phoneEl = document.getElementById('contact-phone');
+      const emailEl = document.getElementById('contact-email');
+      if (phoneEl && !phoneEl.value) phoneEl.value = result.data.phone || '';
+      if (emailEl && !emailEl.value) emailEl.value = result.data.email || '';
+    }).catch(() => {});
+  }
 
   async function submitContactUpdate(alumniId) {
     const phone = document.getElementById('contact-phone').value.trim();

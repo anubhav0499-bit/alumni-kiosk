@@ -8,7 +8,10 @@ const FETCH_TIMEOUT = 25000;
 // before it reaches the backend.
 const PUBLIC_ACTIONS = new Set([
   'getAll', 'search', 'stats', 'checkAttendance',
-  'markAttendance', 'updateContact', 'addAlumni'
+  'markAttendance', 'updateContact', 'addAlumni',
+  // Returns one person's contact details, so it is kept out of
+  // CACHEABLE_ACTIONS below and always served no-store.
+  'getContact'
 ]);
 
 // Actions that expose or destroy event data — admin session required.
