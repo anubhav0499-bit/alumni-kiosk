@@ -6,6 +6,8 @@ const Voice = (() => {
   let bestVoice = null;
   let hindiVoice = null;
   let hindiVoiceChecked = false;
+  // Bumped on every speak()/stopSpeaking() so a superseded run stops queueing.
+  let speakToken = 0;
 
   const DEVANAGARI_RUN = /[ऀ-ॿ]+(?:[\sऀ-ॿ]*[ऀ-ॿ])?/g;
 
@@ -86,8 +88,10 @@ const Voice = (() => {
 
   // --- Speech Synthesis ---
 
+  // Resolves with 'ok' | 'canceled' | 'error' | 'timeout' — never rejects, so a
+  // single bad chunk cannot abort the rest of the greeting.
   function speakChunk(text, options = {}) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = options.rate ?? CONFIG.greeting.rate;
       utterance.pitch = options.pitch ?? CONFIG.greeting.pitch;
@@ -99,11 +103,24 @@ const Voice = (() => {
         : (bestVoice || findBestVoice());
       if (voice) utterance.voice = voice;
 
-      utterance.onend = resolve;
-      utterance.onerror = (e) => {
-        if (e.error === 'canceled') resolve();
-        else reject(e);
+      let settled = false;
+      const finish = (status) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(guard);
+        resolve(status);
       };
+
+      // A network voice can stall and never fire onend, which would hang the
+      // greeting forever. Give it generous headroom, then unstick the queue
+      // and move on rather than leaving the kiosk silent.
+      const guard = setTimeout(() => {
+        try { window.speechSynthesis.cancel(); } catch {}
+        finish('timeout');
+      }, 4000 + text.length * 150);
+
+      utterance.onend = () => finish('ok');
+      utterance.onerror = (e) => finish(e.error === 'canceled' ? 'canceled' : 'error');
 
       window.speechSynthesis.speak(utterance);
     });
@@ -132,6 +149,7 @@ const Voice = (() => {
   async function speak(text, options = {}) {
     if (!('speechSynthesis' in window)) throw new Error('Speech synthesis not supported');
 
+    const token = ++speakToken;
     window.speechSynthesis.cancel();
 
     // options.hindi puts the whole utterance on the Hindi voice. Without it,
@@ -155,11 +173,22 @@ const Voice = (() => {
       });
     }
 
-    startKeepAlive();
+    // pause()/resume() keeps speech alive past Chrome's ~15s cutoff, but it can
+    // stall a network voice mid-sentence. A greeting is nowhere near that long,
+    // so only run it for text that actually risks being cut off.
+    const needsKeepAlive = text.length > 200;
+    if (needsKeepAlive) startKeepAlive();
+
     try {
       for (let i = 0; i < chunks.length; i++) {
+        // Bail out if this run was superseded or stopped, otherwise the rest of
+        // a cancelled greeting keeps playing after the user has moved on.
+        if (token !== speakToken) break;
+
         const chunk = chunks[i];
-        await speakChunk(chunk.text, Object.assign({}, options, { hindi: chunk.hindi, lang: chunk.hindi ? 'hi-IN' : options.lang }));
+        const status = await speakChunk(chunk.text, Object.assign({}, options, { hindi: chunk.hindi, lang: chunk.hindi ? 'hi-IN' : options.lang }));
+        if (status === 'canceled' || token !== speakToken) break;
+
         // Pause only at sentence ends — a gap mid-sentence just to swap voices
         // would sound like a stumble.
         if (i < chunks.length - 1 && /[.!?]$/.test(chunk.text)) {
@@ -167,7 +196,7 @@ const Voice = (() => {
         }
       }
     } finally {
-      stopKeepAlive();
+      if (needsKeepAlive) stopKeepAlive();
     }
   }
 
@@ -197,7 +226,12 @@ const Voice = (() => {
     showWelcomeOverlay(alumni);
 
     try {
-      if (CONFIG.greeting.chimeEnabled) await playChime();
+      // Let the chime ring underneath the greeting rather than waiting out its
+      // full tail — awaiting it left over a second of dead air before speaking.
+      if (CONFIG.greeting.chimeEnabled) {
+        playChime();
+        await new Promise(r => setTimeout(r, 450));
+      }
     } catch {}
     try {
       await speak(text);
@@ -278,6 +312,7 @@ const Voice = (() => {
   }
 
   function stopSpeaking() {
+    speakToken++;
     stopKeepAlive();
     window.speechSynthesis?.cancel();
     const overlay = document.getElementById('welcome-overlay');
