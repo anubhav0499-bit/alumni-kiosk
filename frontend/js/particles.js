@@ -27,14 +27,38 @@
     };
   }
 
+  let running = false;
+
+  // The connection-line pass is O(n^2) per frame, so it is stopped whenever the
+  // canvas is not actually being looked at — off the home screen, or with the
+  // tab in the background — to leave the main thread free for the profile card
+  // animation and photo decoding.
+  function start() {
+    if (running) return;
+    running = true;
+    animId = requestAnimationFrame(animate);
+  }
+
+  function stop() {
+    running = false;
+    if (animId) cancelAnimationFrame(animId);
+    animId = null;
+    ctx.clearRect(0, 0, w, h);
+  }
+
   function init() {
     resize();
     particles = Array.from({ length: PARTICLE_COUNT }, createParticle);
     window.addEventListener('resize', resize);
-    animate();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop(); else start();
+    });
+    window.Particles = { pause: stop, resume: start };
+    start();
   }
 
   function animate() {
+    if (!running) return;
     ctx.clearRect(0, 0, w, h);
 
     for (let i = 0; i < particles.length; i++) {

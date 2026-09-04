@@ -34,6 +34,13 @@ const App = (() => {
       screen.classList.add('active');
       currentScreen = screenId;
     }
+
+    // Background motion is only visible on the home screen; running it during
+    // the profile card animation just competes for frames.
+    const onHome = screenId === 'home-screen';
+    document.body.classList.toggle('screen-busy', !onHome);
+    if (window.Particles) onHome ? window.Particles.resume() : window.Particles.pause();
+
     resetInactivityTimer();
   }
 
@@ -87,6 +94,19 @@ const App = (() => {
 
   function showResultsList(results) {
     lastResults = results;
+
+    // Start fetching the photos while the guest is still reading the list.
+    // Drive thumbnails are slow, so without this the card opens and then waits
+    // on the image.
+    results.forEach(a => {
+      const src = normalizePhotoUrl(a.photoUrl);
+      if (src) {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = src;
+      }
+    });
+
     const container = document.getElementById('search-results');
     container.innerHTML = `
       <div class="results-header">
@@ -194,7 +214,7 @@ const App = (() => {
     const container = document.getElementById('profile-content');
     const photoSrc = normalizePhotoUrl(alumni.photoUrl);
     const photoHtml = photoSrc
-      ? `<img src="${sanitize(sanitizeUrl(photoSrc))}" alt="${sanitize(alumni.name)}" class="profile-photo">`
+      ? `<img src="${sanitize(sanitizeUrl(photoSrc))}" alt="${sanitize(alumni.name)}" class="profile-photo" decoding="async" fetchpriority="high">`
       : '';
 
     container.innerHTML = `

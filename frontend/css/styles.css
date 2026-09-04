@@ -799,10 +799,9 @@ body {
   height: 70%;
   z-index: 1;
   pointer-events: none;
-  backdrop-filter: blur(22px) saturate(1.4);
-  -webkit-backdrop-filter: blur(22px) saturate(1.4);
-  /* Carries the effect on its own: with no photo set there is nothing for the
-     blur to act on, so the gradient has to do the work. */
+  /* No backdrop-filter here on purpose: the card already has one, and nesting
+     them forces a second full compositing pass over the photo every frame,
+     which visibly stutters the card animation. The gradient carries the look. */
   background: linear-gradient(
     to top,
     rgba(3, 11, 21, 0.94) 0%,
@@ -1977,6 +1976,12 @@ body {
 }
 
 /* --- Finance Floaters --- */
+/* Hidden off the home screen so ~15 animating elements are not competing with
+   the profile card animation. display:none stops their animation entirely. */
+.screen-busy .finance-floaters {
+  display: none;
+}
+
 .finance-floaters {
   position: fixed;
   inset: 0;
