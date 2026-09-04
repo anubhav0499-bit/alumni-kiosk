@@ -9,12 +9,19 @@ const CONFIG = {
   },
 
   greeting: {
-    // Spoken entirely by the Hindi voice, which pronounces both "यादें" and
-    // Indian names correctly. The year is spelled out because a Hindi voice
-    // reads "2026" as "दो हज़ार छब्बीस".
-    template: 'Hi {name}, Welcome to यादें twenty twenty six.',
-    // Used only when the device has no Hindi voice installed.
-    templateFallback: 'Hi {name}, Welcome to Yaa they n twenty twenty six.',
+    // One utterance on the Indian English voice: no voice switch, so no gap,
+    // and no dependency on the network mid-greeting.
+    //
+    // If a *local* Hindi voice is installed on the kiosk (Windows: Settings >
+    // Time & language > Language & region > add Hindi > Language options >
+    // Speech), change "Yaadein" to "यादें" here and voice.js will route just
+    // that word to it — correct pronunciation with a gap too short to hear.
+    // Do not do that while only the cloud Hindi voice is available: fetching it
+    // costs ~0.5s of silence mid-sentence.
+    template: 'Hi {name}, Welcome to Yaadein twenty twenty six.',
+    // Used only if the template above contains Devanagari and the device turns
+    // out to have no Hindi voice at all.
+    templateFallback: 'Hi {name}, Welcome to Yaadein twenty twenty six.',
     voice: 'default',
     rate: 0.92,
     pitch: 1.0,
