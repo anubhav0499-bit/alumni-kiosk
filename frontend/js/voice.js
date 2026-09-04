@@ -226,12 +226,9 @@ const Voice = (() => {
     showWelcomeOverlay(alumni);
 
     try {
-      // Let the chime ring underneath the greeting rather than waiting out its
-      // full tail — awaiting it left over a second of dead air before speaking.
-      if (CONFIG.greeting.chimeEnabled) {
-        playChime();
-        await new Promise(r => setTimeout(r, 450));
-      }
+      // Chime rings out fully before the greeting begins, so the two never
+      // overlap.
+      if (CONFIG.greeting.chimeEnabled) await playChime();
     } catch {}
     try {
       await speak(text);
